@@ -1,8 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getPosts, getDashboards, base, fmt } from '../lib';
+import { getPosts, getDashboards, getProjects, base, fmt } from '../lib';
 const posts = (await getPosts()).slice(0, 5);
 const dashboards = (await getDashboards()).slice(0, 3);
+const projects = (await getProjects()).filter((p) => p.data.featured).slice(0, 3);
 ---
 <Base title="Defined Once · Waylon Sittampalam">
   <h1>Defined Once</h1>
@@ -25,6 +26,20 @@ const dashboards = (await getDashboards()).slice(0, 3);
         </li>
       ))}
     </ul>
+  )}
+
+  {projects.length > 0 && (
+    <>
+      <h2>Projects</h2>
+      <ul class="cards">
+        {projects.map((p) => (
+          <li>
+            <h3><a href={`${base}/projects/${p.id}/`}>{p.data.title}</a></h3>
+            <p>{p.data.summary}</p>
+          </li>
+        ))}
+      </ul>
+    </>
   )}
 
   <h2>Sample dashboards</h2>

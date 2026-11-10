@@ -10,7 +10,8 @@ Public site, version-controlled in Git and deployed with
 ├── src/
 │   ├── content/
 │   │   ├── blog/            ← blog posts, one .md file each
-│   │   └── dashboards/      ← one .md "card" per dashboard (title, description, link)
+│   │   ├── dashboards/      ← one .md "card" per dashboard (title, description, link)
+│   │   └── projects/        ← one .md per project (card + write-up page)
 │   ├── content.config.ts    ← frontmatter schemas for posts and dashboards
 │   ├── layouts/Base.astro   ← shared page shell (nav, footer)
 │   ├── pages/               ← routes: /, /blog/, /blog/<slug>/, /dashboards/, /rss.xml
@@ -30,6 +31,7 @@ Public site, version-controlled in Git and deployed with
 | Preview locally, drafts included | `npm run dev` then open http://localhost:4321/ |
 | New blog post | `npm run new-post -- "My post title"` then edit `src/content/blog/<slug>.md` |
 | Publish a post | set `draft: false` in its frontmatter, commit and push to `main` |
+| New project page | `npm run new-project -- "Project name"` then edit `src/content/projects/<slug>.md`; set `featured: true` to show it on the home page |
 | Add a dashboard | put `index.html` in `public/dashboards/<slug>/`, add `src/content/dashboards/<slug>.md` |
 | Add a D3 dashboard | copy `src/pages/dashboards/claims-trend.astro`, put data in `public/data/`, add a card in `src/content/dashboards/` with `path: "dashboards/<name>/"` |
 | Production build check | `npm run build` (drafts are excluded) |

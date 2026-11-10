@@ -14,5 +14,13 @@ export async function getDashboards() {
   return items.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 }
 
+export async function getProjects() {
+  const items = await getCollection('projects', ({ data }) => showDrafts || !data.draft);
+  return items.sort((a, b) =>
+    Number(b.data.featured) - Number(a.data.featured) || b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+}
+
+export const statusLabel = { live: 'Live', 'in-progress': 'In progress', archived: 'Archived' } as const;
+
 export const fmt = (d: Date) =>
   d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });

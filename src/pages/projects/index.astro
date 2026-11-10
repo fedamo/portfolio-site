@@ -1,0 +1,21 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getProjects, base, statusLabel } from '../../lib';
+const items = await getProjects();
+---
+<Base title="Projects · Defined Once">
+  <h1>Projects</h1>
+  <p class="muted">Things I've built, at work and at home.</p>
+  {items.length === 0 ? <p class="muted">Projects coming soon.</p> : (
+    <ul class="cards">
+      {items.map((p) => (
+        <li>
+          <h3><a href={`${base}/projects/${p.id}/`}>{p.data.title}</a> {p.data.draft && <span class="draft">draft</span>}</h3>
+          <div class="muted"><span class="status">{statusLabel[p.data.status]}</span></div>
+          <p>{p.data.summary}</p>
+          {p.data.stack.map((t) => <span class="tag">{t}</span>)}
+        </li>
+      ))}
+    </ul>
+  )}
+</Base>

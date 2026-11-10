@@ -30,4 +30,21 @@ const dashboards = defineCollection({
   }),
 });
 
-export const collections = { blog, dashboards };
+// Projects: one Markdown file per personal or professional project.
+// The body is the write-up shown on /projects/<slug>/.
+const projects = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/projects' }),
+  schema: z.object({
+    title: z.string(),
+    summary: z.string(), // one or two sentences for the card
+    pubDate: z.coerce.date(),
+    status: z.enum(['live', 'in-progress', 'archived']).default('in-progress'),
+    stack: z.array(z.string()).default([]),
+    repoUrl: z.string().url().optional(), // only for public repos
+    demoUrl: z.string().url().optional(),
+    featured: z.boolean().default(false), // featured projects show on the home page
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { blog, dashboards, projects };
