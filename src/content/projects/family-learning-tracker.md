@@ -36,7 +36,11 @@ A small, password-protected web app for one family:
   target one skill, such as inference, vocabulary in context or finding text evidence.
 - **More than the answer.** Each question includes the expected answer with reasoning, a follow-up a
   tutor would ask next, and the one-sentence takeaway it is really teaching.
-- **Learning journal and reading log.** Attempts and notes build a journal of concepts covered, and a
+- **Answers marked in the app (in testing).** The child types an answer and Claude marks it, gives a
+  hint and one retry, and names the likely misconception for the parent. Numeric answers are
+  cross-checked in code, parents can override any marking, and unresolved misconceptions shape the
+  next day's questions. [How it works](/blog/a-tutor-that-notices-why/).
+- **Learning journal and reading log.** Answers and sticking points build a journal of concepts covered, and a
   weekly reading grid tracks minutes read against a daily goal.
 
 ## How it works
