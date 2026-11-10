@@ -1,24 +1,49 @@
 ---
 import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import { getPosts, base, fmt } from '../../lib';
+import { getPosts, base, fmt, readingTime } from '../../lib';
 
 export async function getStaticPaths() {
-  const posts = await getPosts();
-  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+  const posts = await getPosts(); // newest first
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    props: { post, newer: posts[i - 1], older: posts[i + 1] },
+  }));
 }
-const { post } = Astro.props;
+const { post, newer, older } = Astro.props;
 const { Content } = await render(post);
+const d = post.data;
 ---
-<Base title={`${post.data.title} · Defined Once`} description={post.data.description}>
+<Base title={`${d.title} · Defined Once`} description={d.description}>
   <article>
-    <p class="muted"><a href={`${base}/blog/`}>← All posts</a></p>
-    <h1>{post.data.title} {post.data.draft && <span class="draft">draft</span>}</h1>
-    <p class="muted">
-      {fmt(post.data.pubDate)}
-      {post.data.updatedDate && ` · updated ${fmt(post.data.updatedDate)}`}
-      {post.data.stage !== undefined && ` · Stage ${post.data.stage}`}
-    </p>
-    <Content />
+    <p class="back"><a href={`${base}/blog/`}>← All posts</a></p>
+    <header class="post-header">
+      <h1>{d.title} {d.draft && <span class="draft">draft</span>}</h1>
+      <p class="post-dek">{d.description}</p>
+      <div class="post-meta">
+        <time datetime={d.pubDate.toISOString()}>{fmt(d.pubDate)}</time>
+        {d.updatedDate && <><span class="sep">·</span><span>Updated {fmt(d.updatedDate)}</span></>}
+        <span class="sep">·</span><span>{readingTime(post.body)} min read</span>
+        {d.stage !== undefined && <><span class="sep">·</span><span>Stage {d.stage}</span></>}
+        {d.tags.length > 0 && <span class="sep">·</span>}
+        {d.tags.map((t) => <span class="tag">{t}</span>)}
+      </div>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+    <div class="post-footer">
+      <span class="muted">Written by Waylon Sittampalam.</span>
+      {(older || newer) && (
+        <nav class="post-nav" aria-label="More posts">
+          {older && (
+            <a href={`${base}/blog/${older.id}/`}><span class="label">← Previous</span>{older.data.title}</a>
+          )}
+          {newer && (
+            <a class="next" href={`${base}/blog/${newer.id}/`}><span class="label">Next →</span>{newer.data.title}</a>
+          )}
+        </nav>
+      )}
+    </div>
   </article>
 </Base>

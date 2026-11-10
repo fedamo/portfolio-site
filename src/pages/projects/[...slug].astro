@@ -13,14 +13,20 @@ const d = project.data;
 ---
 <Base title={`${d.title} · Defined Once`} description={d.summary}>
   <article>
-    <p class="muted"><a href={`${base}/projects/`}>← All projects</a></p>
-    <h1>{d.title} {d.draft && <span class="draft">draft</span>}</h1>
-    <p class="muted">
-      <span class="status">{statusLabel[d.status]}</span>
-      {d.demoUrl && <> · <a href={d.demoUrl}>Live demo</a></>}
-      {d.repoUrl && <> · <a href={d.repoUrl}>Code</a></>}
-    </p>
-    <p>{d.stack.map((t) => <span class="tag">{t}</span>)}</p>
-    <Content />
+    <p class="back"><a href={`${base}/projects/`}>← All projects</a></p>
+    <header class="post-header">
+      <h1>{d.title} {d.draft && <span class="draft">draft</span>}</h1>
+      <p class="post-dek">{d.summary}</p>
+      <div class="post-meta">
+        <span class="status">{statusLabel[d.status]}</span>
+        {d.demoUrl && <><span class="sep">·</span><a href={d.demoUrl}>Live demo</a></>}
+        {d.repoUrl && <><span class="sep">·</span><a href={d.repoUrl}>Code</a></>}
+        {d.stack.length > 0 && <span class="sep">·</span>}
+        {d.stack.map((t) => <span class="tag">{t}</span>)}
+      </div>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
   </article>
 </Base>

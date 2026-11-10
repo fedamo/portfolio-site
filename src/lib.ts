@@ -22,5 +22,12 @@ export async function getProjects() {
 
 export const statusLabel = { live: 'Live', 'in-progress': 'In progress', archived: 'Archived' } as const;
 
+/** Estimated reading time in minutes, ignoring HTML comments and Markdown syntax. */
+export function readingTime(body: string | undefined): number {
+  const text = (body ?? '').replace(/<!--[\s\S]*?-->/g, '').replace(/[#*_`>\[\]()-]/g, ' ');
+  const words = text.split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 230));
+}
+
 export const fmt = (d: Date) =>
   d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
