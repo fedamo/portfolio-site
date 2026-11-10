@@ -15,6 +15,7 @@ header nav a { color: var(--fg); text-decoration: none; }
 header nav a.brand { font-weight: 700; margin-right: auto; }
 a { color: var(--accent); }
 h1, h2, h3 { line-height: 1.25; }
+.tagline { font-size: 1.15em; color: var(--accent); margin-top: -8px; }
 .muted { color: var(--muted); font-size: 0.92em; }
 .cards { list-style: none; padding: 0; display: grid; gap: 14px; }
 .cards li { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }

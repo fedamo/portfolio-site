@@ -4,13 +4,15 @@ import { getPosts, getDashboards, base, fmt } from '../lib';
 const posts = (await getPosts()).slice(0, 5);
 const dashboards = (await getDashboards()).slice(0, 3);
 ---
-<Base title="Waylon Sittampalam">
-  <h1>Governed, natural-language analytics on Snowflake</h1>
+<Base title="Defined Once · Waylon Sittampalam">
+  <h1>Defined Once</h1>
+  <p class="tagline">Governed, natural-language analytics on Snowflake. Fix the layer, not the prompt.</p>
   <p>
     I'm building in public: metrics defined once in a semantic layer, agents that answer from those
     definitions, and a trust layer that makes every answer checkable. This site holds the write-ups and
     sample dashboards.
   </p>
+  <p class="muted">By Waylon Sittampalam, analytics engineer in Cary, NC.</p>
 
   <h2>Latest posts</h2>
   {posts.length === 0 ? <p class="muted">First post coming soon.</p> : (

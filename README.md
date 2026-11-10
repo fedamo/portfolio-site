@@ -1,4 +1,6 @@
-# Portfolio site: blog and dashboards
+# Defined Once
+
+Blog and sample dashboards by Waylon Sittampalam.
 
 Public site, version-controlled in Git and deployed with
 [Astro](https://astro.build) to Cloudflare Pages.

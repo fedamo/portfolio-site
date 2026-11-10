@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 interface Props { title: string; description?: string }
-const { title, description = 'Governed, natural-language analytics on Snowflake.' } = Astro.props;
+const { title, description = 'Defined Once: governed, natural-language analytics on Snowflake, by Waylon Sittampalam.' } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 <!doctype html>
@@ -17,12 +17,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   <body>
     <header>
       <nav>
-        <a class="brand" href={`${base}/`}>Waylon Sittampalam</a>
+        <a class="brand" href={`${base}/`}>Defined Once</a>
         <a href={`${base}/blog/`}>Blog</a>
         <a href={`${base}/dashboards/`}>Dashboards</a>
       </nav>
     </header>
     <main><slot /></main>
-    <footer class="muted">Built with Astro · content versioned in Git</footer>
+    <footer class="muted">Defined Once · by Waylon Sittampalam · built with Astro</footer>
   </body>
 </html>

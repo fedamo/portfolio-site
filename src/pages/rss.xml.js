@@ -5,7 +5,7 @@ export async function GET(context) {
   const posts = await getPosts();
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   return rss({
-    title: 'Waylon Sittampalam · Blog',
+    title: 'Defined Once',
     description: 'Building governed, natural-language analytics on Snowflake in public.',
     site: context.site,
     items: posts.map((p) => ({
