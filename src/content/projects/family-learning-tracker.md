@@ -5,14 +5,9 @@ pubDate: 2026-07-24
 status: in-progress   # change to "live" if it's in daily use
 stack: [Next.js, TypeScript, PostgreSQL, Prisma, Claude API, Vercel]
 featured: true
-draft: true
+draft: false
 ---
 
-<!--
-  DRAFT - review before publishing (set draft: false).
-  Written from the code. Check the wording, fill in the "What I learned" section in your own words,
-  and keep children's names, ages, schools and answers off this page.
--->
 
 ## The problem
 
@@ -58,7 +53,3 @@ A small, password-protected web app for one family:
 It's the same idea as a governed semantic layer, at kitchen-table scale. The curriculum benchmarks are
 defined once, every generated question points back to the benchmark it serves, and progress is
 measured against those definitions rather than against whatever the last worksheet happened to cover.
-
-## What I learned
-
-<!-- In your own words: what worked, what surprised you, what you'd change. -->

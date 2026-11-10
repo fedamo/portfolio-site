@@ -3,15 +3,9 @@ title: "Teaching a homework app to notice why, not just whether"
 description: "How I turned a family practice-question generator into a tutor that marks answers, spots the misconception behind a mistake, and targets it the next day."
 pubDate: 2026-11-10
 tags: [ai, claude, side-project, learning]
-draft: true
+draft: false
 ---
 
-<!--
-  DRAFT - edit freely in your own voice, then set draft: false.
-  Keep it honest: the in-app marking was tested with made-up data and is about to go into real use.
-  Add a short "After a few weeks" section once your family has used it.
-  Before publishing, also publish the project page (it's linked below), or remove the link.
--->
 
 I built a small web app for my family that turns a school curriculum into daily practice questions.
 It worked, but it had a blind spot that any human tutor would spot straight away: it could tell
@@ -87,7 +81,8 @@ say.
 
 ## What's next
 
-<!-- After a few weeks of real use: how fair did the marking feel? How often did you override it?
-     Did the targeted questions help? One or two honest observations are enough. -->
+The marking has only been tested with made-up answers so far. Next comes real use: I'll
+write up how fair the marking feels, how often I override it, and whether the targeted questions
+actually help, after a few weeks of homework.
 
 More about the build on the [project page](/projects/family-learning-tracker/).
