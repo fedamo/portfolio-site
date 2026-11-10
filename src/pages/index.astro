@@ -1,0 +1,37 @@
+---
+import Base from '../layouts/Base.astro';
+import { getPosts, getDashboards, base, fmt } from '../lib';
+const posts = (await getPosts()).slice(0, 5);
+const dashboards = (await getDashboards()).slice(0, 3);
+---
+<Base title="Waylon Sittampalam">
+  <h1>Governed, natural-language analytics on Snowflake</h1>
+  <p>
+    I'm building in public: metrics defined once in a semantic layer, agents that answer from those
+    definitions, and a trust layer that makes every answer checkable. This site holds the write-ups and
+    sample dashboards.
+  </p>
+
+  <h2>Latest posts</h2>
+  {posts.length === 0 ? <p class="muted">First post coming soon.</p> : (
+    <ul class="cards">
+      {posts.map((p) => (
+        <li>
+          <h3><a href={`${base}/blog/${p.id}/`}>{p.data.title}</a> {p.data.draft && <span class="draft">draft</span>}</h3>
+          <div class="muted">{fmt(p.data.pubDate)}</div>
+          <p>{p.data.description}</p>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <h2>Sample dashboards</h2>
+  <ul class="cards">
+    {dashboards.map((d) => (
+      <li>
+        <h3><a href={`${base}/${d.data.path}`}>{d.data.title}</a></h3>
+        <p>{d.data.description}</p>
+      </li>
+    ))}
+  </ul>
+</Base>

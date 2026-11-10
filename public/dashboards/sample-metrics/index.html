@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claims KPI Dashboard (sample)</title>
+<style>
+  :root { --bg:#f6f8f9; --card:#fff; --fg:#1a1a1a; --muted:#5b6470; --line:#e3e6ea; --accent:#0f4c5c; --bar:#2a7f93; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#111417; --card:#181d21; --fg:#e8eaed; --muted:#9aa3ad; --line:#2a3036; --accent:#6cc3d5; --bar:#4aa8bd; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width:1100px; margin:0 auto; padding:20px 16px 40px; }
+  h1 { font-size:1.4rem; margin:0 0 2px; }
+  .sub { color:var(--muted); margin:0 0 18px; font-size:.9rem; }
+  .grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .kpi .label { color:var(--muted); font-size:.85rem; }
+  .kpi .value { font-size:1.8rem; font-weight:700; margin:2px 0; }
+  details { margin-top:6px; font-size:.82rem; color:var(--muted); }
+  summary { cursor:pointer; color:var(--accent); }
+  code { font-size:.78rem; }
+  .wide { margin-top:14px; }
+  svg text { fill:var(--muted); font-size:11px; }
+  .note { margin-top:16px; font-size:.8rem; color:var(--muted); }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="sub"><a href="../../dashboards/">← All dashboards</a></p>
+  <h1>Claims KPI dashboard</h1>
+  <p class="sub">Sample with synthetic data. Each KPI shows the governed definition it is calculated from.</p>
+
+  <div class="grid" id="kpis"></div>
+
+  <div class="card wide">
+    <strong>Claims by month</strong>
+    <div id="chart"></div>
+  </div>
+
+  <p class="note">Pattern: the definitions on each KPI would live once in a semantic layer (for example a Snowflake Semantic View), so this dashboard, a notebook and an agent all return the same number. Data here is made up.</p>
+</div>
+
+<script>
+// Synthetic data, generated for illustration only.
+const months = ["Jun","Jul","Aug","Sep","Oct","Nov"];
+const claims = [1180, 1242, 1310, 1205, 1388, 1296];
+const paid   = [4.1, 4.4, 4.9, 4.3, 5.2, 4.8];   // $M
+const fraudFlags = [61, 70, 74, 58, 83, 69];
+
+const sum = a => a.reduce((x, y) => x + y, 0);
+const kpis = [
+  { label: "Claims reported (6 mo)", value: sum(claims).toLocaleString(),
+    def: "COUNT(DISTINCT claim_id) where report_date in period. Grain: one row per claim." },
+  { label: "Paid losses (6 mo)", value: "$" + sum(paid).toFixed(1) + "M",
+    def: "SUM(paid_amount) on settled claims, net of recoveries. Excludes reserves." },
+  { label: "Average paid per claim", value: "$" + Math.round(sum(paid) * 1e6 / sum(claims)).toLocaleString(),
+    def: "Paid losses / Claims reported, same period and filters. Certified metric." },
+  { label: "Fraud flag rate", value: (100 * sum(fraudFlags) / sum(claims)).toFixed(1) + "%",
+    def: "COUNT(claims with fraud_flag = 1) / Claims reported." },
+];
+
+document.getElementById("kpis").innerHTML = kpis.map(k => `
+  <div class="card kpi">
+    <div class="label">${k.label}</div>
+    <div class="value">${k.value}</div>
+    <details><summary>Definition</summary><code>${k.def}</code></details>
+  </div>`).join("");
+
+// Simple responsive SVG bar chart
+const W = 600, H = 220, pad = 28, max = Math.max(...claims) * 1.1;
+const bw = (W - pad * 2) / claims.length;
+const bars = claims.map((v, i) => {
+  const h = (v / max) * (H - pad * 2), x = pad + i * bw + bw * 0.15, y = H - pad - h;
+  return `<rect x="${x}" y="${y}" width="${bw * 0.7}" height="${h}" rx="3" fill="var(--bar)"><title>${months[i]}: ${v}</title></rect>
+          <text x="${x + bw * 0.35}" y="${H - pad + 14}" text-anchor="middle">${months[i]}</text>
+          <text x="${x + bw * 0.35}" y="${y - 4}" text-anchor="middle">${v}</text>`;
+}).join("");
+document.getElementById("chart").innerHTML =
+  `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Claims by month">${bars}</svg>`;
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getPosts, base, fmt } from '../../lib';
+const posts = await getPosts();
+---
+<Base title="Blog · Waylon Sittampalam">
+  <h1>Blog</h1>
+  <p class="muted">Building governed analytics in public, one stage at a time. <a href={`${base}/rss.xml`}>RSS</a></p>
+  <ul class="cards">
+    {posts.map((p) => (
+      <li>
+        <h3><a href={`${base}/blog/${p.id}/`}>{p.data.title}</a> {p.data.draft && <span class="draft">draft</span>}</h3>
+        <div class="muted">
+          {fmt(p.data.pubDate)}{p.data.stage !== undefined && ` · Stage ${p.data.stage}`}
+        </div>
+        <p>{p.data.description}</p>
+        {p.data.tags.map((t) => <span class="tag">{t}</span>)}
+      </li>
+    ))}
+  </ul>
+</Base>

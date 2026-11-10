@@ -1,0 +1,129 @@
+---
+// Template for a D3 dashboard as an Astro page.
+// D3 is installed from npm (pinned in package.json) and bundled by Astro,
+// so this page shares the site layout, theme and deploy pipeline.
+import Base from '../../layouts/Base.astro';
+import { base } from '../../lib';
+---
+<Base title="Claims trend · Dashboards" description="Monthly claims with a fraud-rate overlay, built with D3.">
+  <p class="muted"><a href={`${base}/dashboards/`}>← All dashboards</a></p>
+  <h1>Claims trend</h1>
+  <p class="muted">Synthetic data · 24 months · hover a month for details</p>
+
+  <div class="controls" role="group" aria-label="Metric">
+    <button type="button" data-metric="claims" aria-pressed="true">Claims reported</button>
+    <button type="button" data-metric="paid_musd" aria-pressed="false">Paid losses ($M)</button>
+  </div>
+
+  <div id="chart" class="chart"></div>
+  <div id="tooltip" class="tooltip" hidden></div>
+
+  <dl class="defs">
+    <dt>Claims reported</dt><dd>COUNT(DISTINCT claim_id) by report month.</dd>
+    <dt>Paid losses</dt><dd>SUM(paid_amount) on settled claims, net of recoveries, in $M.</dd>
+    <dt>Fraud flag rate (line)</dt><dd>Claims with fraud_flag = 1 ÷ claims reported.</dd>
+  </dl>
+  <p class="muted">Data: <a href={`${base}/data/claims-monthly.csv`}>claims-monthly.csv</a></p>
+</Base>
+
+<style>
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+  .controls button { font: inherit; font-size: 0.9em; padding: 4px 12px; border-radius: 99px;
+    border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; }
+  .controls button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .chart { width: 100%; }
+  .tooltip { position: fixed; pointer-events: none; background: var(--card); border: 1px solid var(--line);
+    border-radius: 6px; padding: 6px 10px; font-size: 0.85em; box-shadow: 0 2px 8px rgb(0 0 0 / 0.15); }
+  .defs { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; font-size: 0.88em; margin-top: 18px; }
+  .defs dt { font-weight: 600; }
+  .defs dd { margin: 0; color: var(--muted); }
+  :global(.chart svg text) { fill: var(--muted); font-size: 11px; }
+  :global(.chart .domain), :global(.chart .tick line) { stroke: var(--line); }
+</style>
+
+<script>
+  import * as d3 from 'd3';
+
+  type Row = { month: Date; claims: number; paid_musd: number; fraud_flags: number; rate: number };
+  type Metric = 'claims' | 'paid_musd';
+
+  async function main() {
+  const css = (v: string) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const parseMonth = d3.timeParse('%Y-%m');
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  const data: Row[] = await d3.csv(`${base}/data/claims-monthly.csv`, (d) => ({
+    month: parseMonth(d.month!)!,
+    claims: +d.claims!, paid_musd: +d.paid_musd!, fraud_flags: +d.fraud_flags!,
+    rate: +d.fraud_flags! / +d.claims!,
+  }));
+
+  const container = document.getElementById('chart')!;
+  const tooltip = document.getElementById('tooltip')!;
+  const label: Record<Metric, string> = { claims: 'Claims', paid_musd: 'Paid ($M)' };
+  let metric: Metric = 'claims';
+
+  function draw() {
+    const width = container.clientWidth, height = Math.max(260, Math.min(380, width * 0.55));
+    const m = { top: 16, right: 44, bottom: 28, left: 44 };
+    container.replaceChildren();
+
+    const svg = d3.select(container).append('svg')
+      .attr('viewBox', `0 0 ${width} ${height}`).attr('width', width).attr('height', height)
+      .attr('role', 'img').attr('aria-label', `${label[metric]} by month with fraud flag rate`);
+
+    const x = d3.scaleBand<Date>().domain(data.map((d) => d.month))
+      .range([m.left, width - m.right]).padding(0.2);
+    const y = d3.scaleLinear().domain([0, d3.max(data, (d) => d[metric])! * 1.1]).nice()
+      .range([height - m.bottom, m.top]);
+    const y2 = d3.scaleLinear().domain([0, d3.max(data, (d) => d.rate)! * 1.25])
+      .range([height - m.bottom, m.top]);
+
+    const every = width < 520 ? 4 : 2;
+    svg.append('g').attr('transform', `translate(0,${height - m.bottom})`)
+      .call(d3.axisBottom(x).tickValues(data.filter((_, i) => i % every === 0).map((d) => d.month))
+        .tickFormat(d3.timeFormat('%b %y') as any));
+    svg.append('g').attr('transform', `translate(${m.left},0)`).call(d3.axisLeft(y).ticks(5));
+    svg.append('g').attr('transform', `translate(${width - m.right},0)`)
+      .call(d3.axisRight(y2).ticks(4).tickFormat(d3.format('.0%')));
+
+    svg.append('g').selectAll('rect').data(data).join('rect')
+      .attr('x', (d) => x(d.month)!).attr('width', x.bandwidth()).attr('rx', 2)
+      .attr('fill', css('--accent')).attr('opacity', 0.75)
+      .attr('y', (d) => y(d[metric])).attr('height', (d) => y(0) - y(d[metric]));
+
+    const line = d3.line<Row>().x((d) => x(d.month)! + x.bandwidth() / 2).y((d) => y2(d.rate)).curve(d3.curveMonotoneX);
+    svg.append('path').datum(data).attr('fill', 'none').attr('stroke', '#d9822b').attr('stroke-width', 2).attr('d', line);
+
+    // Invisible hover targets, one per month
+    svg.append('g').selectAll('rect').data(data).join('rect')
+      .attr('x', (d) => x(d.month)!).attr('width', x.bandwidth())
+      .attr('y', m.top).attr('height', height - m.top - m.bottom).attr('fill', 'transparent')
+      .on('pointermove', (event: PointerEvent, d) => {
+        tooltip.hidden = false;
+        tooltip.innerHTML = `<strong>${d3.timeFormat('%B %Y')(d.month)}</strong><br>
+          Claims: ${d.claims.toLocaleString()}<br>Paid: $${d.paid_musd.toFixed(2)}M<br>
+          Fraud flag rate: ${d3.format('.1%')(d.rate)}`;
+        const tx = Math.min(event.clientX + 12, window.innerWidth - tooltip.offsetWidth - 8);
+        tooltip.style.left = `${tx}px`;
+        tooltip.style.top = `${event.clientY + 12}px`;
+      })
+      .on('pointerleave', () => { tooltip.hidden = true; });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.controls button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      metric = btn.dataset.metric as Metric;
+      document.querySelectorAll('.controls button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      draw();
+    });
+  });
+
+  // Redraw only when the width changes (drawing changes the height, which would loop).
+  let lastWidth = 0;
+  new ResizeObserver(() => {
+    if (container.clientWidth !== lastWidth) { lastWidth = container.clientWidth; draw(); }
+  }).observe(container);
+  }
+
+  main();
+</script>
