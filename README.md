@@ -1,6 +1,6 @@
 # Defined Once
 
-Blog and sample dashboards by Waylon Sittampalam.
+Blog and sample dashboards by Waylon Sittampalam. Live at https://definedonce.fedamo.workers.dev
 
 Public site, version-controlled in Git and deployed with
 [Astro](https://astro.build) to Cloudflare Pages.
