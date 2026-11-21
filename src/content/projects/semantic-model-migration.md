@@ -1,12 +1,12 @@
 ---
 title: "Migrating BI semantic models to a cloud data platform, with zero visible change"
-summary: "Moved production BI semantic models from a legacy warehouse to a cloud data platform's curated gold layer. Users saw the same numbers, the same security and the same reports, proven by automated parity checks."
+summary: "Moved production BI semantic models from a legacy warehouse to a cloud data platform's gold layer with zero visible change. Because the models lived as code in Git, a fix discovered in one model could be applied to all of them at scale."
 pubDate: 2026-11-21
 status: live
 stack: [Power BI (PBIP/TMDL), Snowflake, Azure Synapse, Git, Azure DevOps, Python, REST APIs, Claude Code]
 featured: true
 sketch: layers
-skills: ["Data migration", "Metrics-as-code", "CI/CD", "Automated parity testing", "Data governance"]
+skills: ["Data migration", "Metrics-as-code", "Fix once, apply at scale", "CI/CD", "Automated parity testing"]
 draft: false
 ---
 
@@ -45,6 +45,21 @@ Every model followed the same nine steps, which turned a risky migration into a 
    the explanation.
 9. **Sign-off.** A short pass summary for the business owner: current state, known differences (impact,
    why, examples) and any decisions needed. Then track it through feedback to deployment.
+
+## The best part: fix it once, apply it everywhere
+
+Each model was saved in Power BI's text-based project format (PBIP, with TMDL model definitions), so every
+model was plain text in Git rather than a binary file. That changed the economics of the whole project.
+
+When a problem surfaced in one model (a column type that didn't match production, a query that didn't
+follow the parameter standard, a pattern that broke on the renamed databases), the fix was worked out once,
+in that model, and checked with the parity tests. Then, because every other model shared the same structure
+as code, the same fix could be applied across all of them at scale, reviewed as a diff in Git, and re-tested
+the same way.
+
+The shared issue tracker did the same for knowledge: the root cause and the fix were written down once and
+reused by every later model. Each model made the next one faster and safer, instead of every migration
+starting from scratch.
 
 ## Harder moments
 
