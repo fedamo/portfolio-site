@@ -19,12 +19,12 @@ covering, and it's hard to tell which skills are solid and which still need work
 ## What it does
 
 - **Reads the curriculum.** Upload the school's document (PDF, Word or pasted text) and Claude pulls out every
-  benchmark, like "can add two-digit numbers with regrouping". It's told to extract, not summarise, and not to
-  make anything up.
+  benchmark, like "can add two-digit numbers with regrouping". It's told to copy each statement as
+  written and invent nothing.
 - **Tracks each benchmark** as not started, in progress or achieved.
 - **Writes daily practice.** Every morning a scheduled job writes four questions for each subject that still
   has gaps, each tied to a specific benchmark.
-- **Asks like a tutor, not a worksheet.** Maths questions come at the skill from different angles: word problems,
+- **Asks questions the way a tutor would.** Maths questions come at the skill from different angles: word problems,
   "solve it two ways", "spot the mistake", estimate first. Reading questions come with a short original
   passage aimed at one skill.
 - **Marks the answers.** My kids type their answers in. Claude marks each one, gives a hint and a second try, and
@@ -38,7 +38,7 @@ covering, and it's hard to tell which skills are solid and which still need work
 
 - **App:** Next.js and TypeScript, with PostgreSQL through Prisma, hosted on Vercel.
 - **AI:** the Claude API with structured outputs. Every response is checked against a schema before it's saved,
-  so the app stores clean data, not free text it has to parse.
+  so the app only ever stores clean, structured data.
 - **Scheduling:** a Vercel cron job writes each day's questions, and the long tutoring prompt is cached to keep
   repeat calls cheap.
 - **Built with Claude Code,** working from specs.

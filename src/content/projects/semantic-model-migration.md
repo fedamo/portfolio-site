@@ -13,7 +13,7 @@ draft: false
 ## What we were trying to do
 
 We had a set of production Power BI models reading from a legacy Synapse warehouse. They needed to move to
-Snowflake and read from its gold layer instead. The rule was simple: users shouldn't notice. Same numbers,
+Snowflake and read from its gold layer instead. The one rule was that users shouldn't notice. Same numbers,
 same row-level security, same report behaviour.
 
 While we were in there, I also wanted the models to stop hard-coding their connections, so the same model
@@ -42,10 +42,9 @@ Every model went through the same steps:
 9. **Get sign-off.** A short summary for the business owner covering what's done, what's different and why,
    and any decisions they need to make.
 
-## The best part: fix it once, roll it out everywhere
+## Fix it once, roll it out everywhere
 
-Every model was saved in Power BI's text-based project format (PBIP/TMDL), so it was just files in Git, not
-a binary blob. That changed everything.
+Every model was saved in Power BI's text-based project format (PBIP/TMDL), so every model was a set of text files in Git.
 
 When something broke in one model, like a type mismatch, a query that didn't follow the parameter pattern, or
 something the database rename broke, I fixed it once and proved it with the parity checks. Then I could apply
@@ -54,18 +53,17 @@ the same fix to every other model, review it as a diff, and re-run the same chec
 The shared tracker did the same for the "why". Once a root cause was written down, the next model didn't have
 to rediscover it. Each model made the next one quicker.
 
-## A bonus: it found problems in prod
+## Finding problems that were already in prod
 
-Comparing every table, column and value against production doesn't just check the new model. It shines a light on
-the old one too. Along the way the checks turned up issues that were already sitting in production:
+Comparing every table, column and value against production tests production too. Along the way the checks turned up issues that were already sitting in production:
 
 - **Duplicate values** in keys that should have been unique, which were quietly breaking refreshes.
 - **Differences in DDL and database logic** between the old warehouse and the new one, such as table definitions
   and view logic that didn't line up, so the same query could return different results.
 
 For each one I raised it with the engineering team, with the evidence and a proposed fix, kept it separate from
-migration differences, and re-tested once it was fixed upstream. So the business ended up with cleaner production
-data, not just migrated models.
+migration differences, and re-tested once it was fixed upstream. The business ended up with cleaner production
+data as well as migrated models.
 
 ## What made it tricky
 
@@ -73,7 +71,7 @@ data, not just migrated models.
   those so they'd be handled properly when promoted.
 - **The databases were renamed mid-project.** Every model's parameters and branches had to be updated, and the
   rename caused a misleading gateway error that took some digging to trace.
-- **Row-level security was checked properly:** who can see what, not just whether the row counts matched.
+- **Row-level security was checked properly:** who can see what, as well as the row counts.
 
 ## Where it landed
 

@@ -19,9 +19,9 @@ Experienced roasters read all of that at a glance. I can't yet. By the time I've
 worked out the rate of rise and remembered what the plan said, the moment's gone.
 
 My roaster, a Sandbox Smart R1 (150 g, electric, Bluetooth), doesn't help much either. It shows a temperature
-in an app, and that's it: nothing I can log, compare or learn from.
+in an app, and I can't log, compare or learn from any of it.
 
-## The idea: a copilot, not an autopilot
+## How the copilot helps
 
 Before each roast I set the plan: the bean, its profile (Sweet Maria's notes on how it behaves), the roast
 level I want and the timings to aim for.
