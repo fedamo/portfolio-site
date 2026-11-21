@@ -57,10 +57,15 @@ to rediscover it. Each model made the next one quicker.
 ## A bonus: it found problems in prod
 
 Comparing every table, column and value against production doesn't just check the new model. It shines a light on
-the old one too. Along the way the checks turned up issues that were already sitting in production, like duplicate
-values in keys that should have been unique, which were quietly breaking refreshes. I flagged each one to the owners
-with the evidence, kept them separate from migration differences, and re-tested once they were fixed upstream. So the
-business ended up with cleaner production models, not just migrated ones.
+the old one too. Along the way the checks turned up issues that were already sitting in production:
+
+- **Duplicate values** in keys that should have been unique, which were quietly breaking refreshes.
+- **Differences in DDL and database logic** between the old warehouse and the new one, such as table definitions
+  and view logic that didn't line up, so the same query could return different results.
+
+For each one I raised it with the engineering team, with the evidence and a proposed fix, kept it separate from
+migration differences, and re-tested once it was fixed upstream. So the business ended up with cleaner production
+data, not just migrated models.
 
 ## What made it tricky
 
