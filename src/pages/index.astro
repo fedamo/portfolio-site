@@ -1,54 +1,53 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getPosts, getDashboards, getProjects, base, fmt } from '../lib';
-const posts = (await getPosts()).slice(0, 5);
-const dashboards = (await getDashboards()).slice(0, 3);
-const projects = (await getProjects()).filter((p) => p.data.featured).slice(0, 3);
+import PostCard from '../components/PostCard.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import DashboardCard from '../components/DashboardCard.astro';
+import { getPosts, getDashboards, getProjects, base } from '../lib';
+const posts = (await getPosts()).slice(0, 3);
+const dashboards = (await getDashboards()).slice(0, 2);
+const projects = (await getProjects()).filter((p) => p.data.featured).slice(0, 2);
 ---
 <Base title="Defined Once · Waylon Sittampalam">
-  <h1>Defined Once</h1>
-  <p class="tagline">Governed, natural-language analytics on Snowflake. Fix the layer, not the prompt.</p>
-  <p>
-    I'm building in public: metrics defined once in a semantic layer, agents that answer from those
-    definitions, and a trust layer that makes every answer checkable. This site holds the write-ups and
-    sample dashboards.
-  </p>
-  <p class="muted">By Waylon Sittampalam, analytics engineer in Cary, NC.</p>
+  <section class="hero">
+    <p class="eyebrow">Governed analytics · Snowflake · AI</p>
+    <h1>Define it once.<br />Trust it everywhere.</h1>
+    <p class="hero-lede">
+      I build governed, natural-language analytics: metrics defined once in a semantic layer, agents that
+      answer from those definitions, and checks that make every answer verifiable.{' '}
+      <strong>Fix the layer, not the prompt.</strong>
+    </p>
+    <p class="hero-by">
+      Waylon Sittampalam · analytics engineer in Cary, NC ·{' '}
+      <a href={`${base}/blog/`}>Read the blog</a>
+    </p>
+  </section>
 
-  <h2>Latest posts</h2>
-  {posts.length === 0 ? <p class="muted">First post coming soon.</p> : (
-    <ul class="cards">
-      {posts.map((p) => (
-        <li>
-          <h3><a href={`${base}/blog/${p.id}/`}>{p.data.title}</a> {p.data.draft && <span class="draft">draft</span>}</h3>
-          <div class="muted">{fmt(p.data.pubDate)}</div>
-          <p>{p.data.description}</p>
-        </li>
-      ))}
-    </ul>
-  )}
+  <section class="section">
+    <div class="section-head">
+      <h2>Latest writing</h2>
+      <a href={`${base}/blog/`}>All posts →</a>
+    </div>
+    {posts.length === 0 ? <p class="muted">First post coming soon.</p> : (
+      <div class="card-list">{posts.map((p) => <PostCard post={p} />)}</div>
+    )}
+  </section>
 
   {projects.length > 0 && (
-    <>
-      <h2>Projects</h2>
-      <ul class="cards">
-        {projects.map((p) => (
-          <li>
-            <h3><a href={`${base}/projects/${p.id}/`}>{p.data.title}</a></h3>
-            <p>{p.data.summary}</p>
-          </li>
-        ))}
-      </ul>
-    </>
+    <section class="section">
+      <div class="section-head">
+        <h2>Projects</h2>
+        <a href={`${base}/projects/`}>All projects →</a>
+      </div>
+      <div class="card-list">{projects.map((p) => <ProjectCard project={p} />)}</div>
+    </section>
   )}
 
-  <h2>Sample dashboards</h2>
-  <ul class="cards">
-    {dashboards.map((d) => (
-      <li>
-        <h3><a href={`${base}/${d.data.path}`}>{d.data.title}</a></h3>
-        <p>{d.data.description}</p>
-      </li>
-    ))}
-  </ul>
+  <section class="section">
+    <div class="section-head">
+      <h2>Sample dashboards</h2>
+      <a href={`${base}/dashboards/`}>All dashboards →</a>
+    </div>
+    <div class="card-grid">{dashboards.map((d) => <DashboardCard item={d} />)}</div>
+  </section>
 </Base>

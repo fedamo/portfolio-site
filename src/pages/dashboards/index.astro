@@ -1,19 +1,13 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getDashboards, base, fmt } from '../../lib';
+import DashboardCard from '../../components/DashboardCard.astro';
+import { getDashboards } from '../../lib';
 const items = await getDashboards();
 ---
-<Base title="Dashboards · Defined Once">
-  <h1>Sample dashboards</h1>
-  <p class="muted">Standalone HTML dashboards. All data is synthetic or public unless stated.</p>
-  <ul class="cards">
-    {items.map((d) => (
-      <li>
-        <h3><a href={`${base}/${d.data.path}`}>{d.data.title}</a> {d.data.draft && <span class="draft">draft</span>}</h3>
-        <div class="muted">{fmt(d.data.pubDate)}{d.data.syntheticData && ' · synthetic data'}</div>
-        <p>{d.data.description}</p>
-        {d.data.tools.map((t) => <span class="tag">{t}</span>)}
-      </li>
-    ))}
-  </ul>
+<Base title="Dashboards · Defined Once" description="Sample dashboards built on made-up or public data.">
+  <header class="page-head">
+    <h1>Sample dashboards</h1>
+    <p class="post-dek">Interactive examples built with D3 and plain HTML. All data is made up or public, and every number shows its definition.</p>
+  </header>
+  <div class="card-grid">{items.map((d) => <DashboardCard item={d} />)}</div>
 </Base>

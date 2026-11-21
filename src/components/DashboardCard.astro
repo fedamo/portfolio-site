@@ -1,0 +1,15 @@
+---
+import { base } from '../lib';
+const { item } = Astro.props;
+const d = item.data;
+---
+<a class="card" href={`${base}/${d.path}`}>
+  <div class="card-meta">
+    <span>Dashboard</span>
+    {d.syntheticData && <><span class="sep">·</span><span>synthetic data</span></>}
+    {d.draft && <span class="draft">draft</span>}
+  </div>
+  <h3>{d.title}</h3>
+  <p>{d.description}</p>
+  {d.tools.length > 0 && <div class="card-tags">{d.tools.map((t: string) => <span class="tag">{t}</span>)}</div>}
+</a>

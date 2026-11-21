@@ -3,6 +3,13 @@ import '../styles/global.css';
 interface Props { title: string; description?: string }
 const { title, description = 'Defined Once: governed, natural-language analytics on Snowflake, by Waylon Sittampalam.' } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const path = Astro.url.pathname;
+const nav = [
+  { href: `${base}/blog/`, label: 'Blog' },
+  { href: `${base}/projects/`, label: 'Projects' },
+  { href: `${base}/dashboards/`, label: 'Dashboards' },
+];
+const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 <!doctype html>
 <html lang="en">
@@ -11,19 +18,35 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="alternate" type="application/rss+xml" title="Blog" href={`${base}/rss.xml`} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content="website" />
+    <link rel="alternate" type="application/rss+xml" title="Defined Once" href={`${base}/rss.xml`} />
     <link rel="sitemap" href={`${base}/sitemap-index.xml`} />
   </head>
   <body>
-    <header>
+    <header class="site-header">
       <nav>
-        <a class="brand" href={`${base}/`}>Defined Once</a>
-        <a href={`${base}/blog/`}>Blog</a>
-        <a href={`${base}/projects/`}>Projects</a>
-        <a href={`${base}/dashboards/`}>Dashboards</a>
+        <a class="brand" href={`${base}/`}>
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" /><path d="M8 12h16M8 20h16" /></svg>
+          Defined Once
+        </a>
+        {nav.map((n) => (
+          <a href={n.href} aria-current={path.startsWith(n.href) ? 'page' : undefined}>{n.label}</a>
+        ))}
       </nav>
     </header>
     <main><slot /></main>
-    <footer class="muted">Defined Once · by Waylon Sittampalam · built with Astro</footer>
+    <footer class="site-footer">
+      <div class="footer-links">
+        {nav.map((n) => <a href={n.href}>{n.label}</a>)}
+        <a href={`${base}/rss.xml`}>RSS</a>
+        <a href="https://github.com/fedamo/portfolio-site">Source</a>
+      </div>
+      <p>© {new Date().getFullYear()} Waylon Sittampalam · Defined Once</p>
+    </footer>
   </body>
 </html>
