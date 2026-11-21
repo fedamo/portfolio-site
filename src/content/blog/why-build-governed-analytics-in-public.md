@@ -33,7 +33,7 @@ An end-to-end, open-source build on Snowflake, using public insurance claims dat
 ## How I work
 
 I work AI-native: I write the spec, hand agents end-to-end tasks, and review their output to the
-same bar as human code. When an agent gets something wrong, I fix the governed layer, not the prompt.
+same bar as human code.
 
 ## What's next
 
