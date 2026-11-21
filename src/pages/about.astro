@@ -23,16 +23,22 @@ import { base, links } from '../lib';
     <h2>What I care about</h2>
     <p>
       Business users ask the same question and get different answers, because "revenue" is defined five ways across
-      five dashboards. Pointing an AI at the raw tables makes it worse. My answer is to define each metric once, in a
-      governed layer, and make every answer checkable against it. When something is wrong, I fix the layer, not the
-      prompt. That's where the name <em>Defined Once</em> comes from.
+      five dashboards. Pointing an AI at the raw tables makes it worse. My answer is to treat metric definitions as
+      code: define each one once in a governed semantic layer, put the business logic in the right layer, and make
+      every answer checkable against it — whether it's read by a dashboard, a notebook or an AI agent. When something
+      is wrong, I fix the layer, not the prompt. That's where the name <em>Defined Once</em> comes from.
     </p>
 
     <h2>How I work</h2>
     <p>
       I work AI-native: I write the spec, hand AI agents the end-to-end build — exploring data, writing models, tests
-      and documentation — and review their output to the same standard as a teammate's. The checks that matter are
-      deterministic code, not the model's opinion of itself.
+      and documentation — and review their output to the same standard as a teammate's. I validate generated SQL and
+      transformation logic, keep business logic from being duplicated, and can explain and defend every design
+      decision. The checks that matter are deterministic code, not the model's opinion of itself.</p>
+    <p>
+      I bring software engineering practice to analytics: version control, code review, CI/CD, automated testing,
+      data-quality checks, monitoring and documentation that stays current — so data products stay reliable as they
+      grow.
     </p>
 
     <h2>What I'm building</h2>
