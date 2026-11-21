@@ -143,3 +143,5 @@ h1, h2, h3 { font-family: var(--serif); color: var(--fg); }
   .site-header nav { gap: 4px 18px; }
   .site-header a { font-size: 14.5px; }
 }
+
+.about-cta { margin: 0 0 10px; font-family: var(--serif); font-size: 19px; color: var(--fg); }

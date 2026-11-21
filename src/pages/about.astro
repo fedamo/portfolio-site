@@ -7,7 +7,7 @@ import { base, links } from '../lib';
   <header class="page-head about-head">
     <div>
       <h1>About</h1>
-      <p class="page-dek">I'm Waylon Sittampalam, an analytics engineer in Cary, North Carolina.</p>
+      <p class="page-dek">Waylon Sittampalam. Analytics engineer in Cary, North Carolina, working on metrics that mean the same thing everywhere they're used.</p>
     </div>
     <Sketch name="layers" />
   </header>
@@ -36,11 +36,12 @@ import { base, links } from '../lib';
       are deterministic code, not the model's opinion of itself.
     </p>
 
-    <h2>What I'm building</h2>
+    <h2>What I've built</h2>
     <ul>
-      <li><a href={`${base}/projects/family-learning-tracker/`}>Family Learning Tracker</a> — an AI tutor that marks answers, finds the misconception behind a mistake and targets it the next day.</li>
+      <li><a href={`${base}/projects/semantic-model-migration/`}>A BI model migration nobody noticed</a>: production models moved to a new warehouse with the same numbers and security, and fixes found in one model rolled out to all of them.</li>
       <li>Python tooling that checks BI semantic models as code: model numbers against source data, and model definitions against naming and query standards.</li>
-      <li>A public, end-to-end build of governed natural-language analytics on a cloud data platform, written up on this blog as it happens.</li>
+      <li><a href={`${base}/projects/family-learning-tracker/`}>Family Learning Tracker</a>: an AI tutor that marks my kids' answers, finds the misconception behind a mistake and targets it the next day.</li>
+      <li><a href={`${base}/projects/bean-roasting-copilot/`}>A bean roasting copilot</a>: tracks a coffee roast in real time and tells me what to change, based on the bean and my plan.</li>
     </ul>
 
     <h2>Background</h2>
@@ -48,10 +49,11 @@ import { base, links } from '../lib';
   </div>
 
   <div class="post-footer">
+    <p class="about-cta">Hiring for analytics engineering or AI-ready data work? I'd like to hear from you.</p>
     <p class="about-links">
-      {links.linkedin && <a href={links.linkedin} rel="me">LinkedIn</a>}
-      <a href={`${base}/blog/`}>Read the writing</a>
-      <a href={`${base}/rss.xml`}>RSS</a>
+      {links.linkedin && <a href={links.linkedin} rel="me">Connect on LinkedIn</a>}
+      <a href={`${base}/projects/`}>See the projects</a>
+      <a href={`${base}/blog/`}>Read the write-ups</a>
     </p>
   </div>
 </Base>
