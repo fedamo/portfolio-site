@@ -1,6 +1,6 @@
 ---
 title: "Family Learning Tracker"
-summary: "A private web app that turns a child's school curriculum into daily, tutor-style practice questions, and tracks reading and progress against each curriculum benchmark."
+summary: "A small private app that turns my kids' school curriculum into daily practice. They answer in the app, it works out why a wrong answer was wrong, and the next day's questions go after exactly that."
 pubDate: 2026-07-24
 status: in-progress   # change to "live" if it's in daily use
 stack: [Next.js, TypeScript, PostgreSQL, Prisma, Claude API, Vercel]
@@ -10,48 +10,46 @@ sketch: book
 skills: ["AI product design", "Structured LLM outputs", "Human-in-the-loop", "Claude API"]
 ---
 
+## Why I built it
 
-## The problem
+School curriculum documents spell out what a child should be able to do by the end of the year. Turning that
+into useful practice at home takes time, though. Generic worksheets don't follow what the class is actually
+covering, and it's hard to tell which skills are solid and which still need work.
 
-School curriculum documents describe exactly what a child should be able to do by the end of the
-year, but turning that into useful practice at home takes time. Generic worksheets don't follow what
-the class is actually covering, and it's hard to see which skills are secure and which still need work.
+## What it does
 
-## What I built
+- **Reads the curriculum.** Upload the school's document (PDF, Word or pasted text) and Claude pulls out every
+  benchmark, like "can add two-digit numbers with regrouping". It's told to extract, not summarise, and not to
+  make anything up.
+- **Tracks each benchmark** as not started, in progress or achieved.
+- **Writes daily practice.** Every morning a scheduled job writes four questions for each subject that still
+  has gaps, each tied to a specific benchmark.
+- **Asks like a tutor, not a worksheet.** Maths questions come at the skill from different angles: word problems,
+  "solve it two ways", "spot the mistake", estimate first. Reading questions come with a short original
+  passage aimed at one skill.
+- **Marks the answers.** My kids type their answers in. Claude marks each one, gives a hint and a second try, and
+  tells me the likely misconception ("added the tens without carrying"). Number answers are double-checked in
+  code, and I can override any mark.
+- **Closes the loop.** Misconceptions that haven't been fixed feed into the next day's questions, so practice goes
+  straight at where they're stuck.
+- **Keeps a learning journal and a reading log,** so I can see what's been covered and how much reading got done.
 
-A small, password-protected web app for one family:
+## How it's built
 
-- **Curriculum in, benchmarks out.** Upload a curriculum document (PDF, Word, or pasted text). Claude
-  extracts every benchmark statement, such as "can infer a character's feelings from their actions",
-  grouped by subject. It is instructed to extract, not summarise, and not to invent statements.
-- **Progress per benchmark.** Each benchmark is tracked as not started, in progress or achieved.
-- **Daily practice set.** Every morning a scheduled job generates four questions per subject that still
-  has unmet benchmarks, each one tied to a specific benchmark.
-- **Tutor-style questions, not worksheets.** Maths questions vary the angle: real-world stories,
-  solving the same problem two ways, spotting the error in another student's work, estimating before
-  calculating, and missing-number problems. Reading questions come with a short original passage and
-  target one skill, such as inference, vocabulary in context or finding text evidence.
-- **More than the answer.** Each question includes the expected answer with reasoning, a follow-up a
-  tutor would ask next, and the one-sentence takeaway it is really teaching.
-- **Answers marked in the app (in testing).** The child types an answer and Claude marks it, gives a
-  hint and one retry, and names the likely misconception for the parent. Numeric answers are
-  cross-checked in code, parents can override any marking, and unresolved misconceptions shape the
-  next day's questions. [How it works](/blog/a-tutor-that-notices-why/).
-- **Learning journal and reading log.** Answers and sticking points build a journal of concepts covered, and a
-  weekly reading grid tracks minutes read against a daily goal.
+- **App:** Next.js and TypeScript, with PostgreSQL through Prisma, hosted on Vercel.
+- **AI:** the Claude API with structured outputs. Every response is checked against a schema before it's saved,
+  so the app stores clean data, not free text it has to parse.
+- **Scheduling:** a Vercel cron job writes each day's questions, and the long tutoring prompt is cached to keep
+  repeat calls cheap.
+- **Built with Claude Code,** working from specs.
 
-## How it works
+## The bit I like most
 
-- **App:** Next.js and TypeScript, with PostgreSQL through Prisma.
-- **AI:** the Claude API with structured outputs. Every response is validated against a Zod schema
-  before it's saved, so the app stores clean benchmarks and questions, not free text to parse.
-- **Scheduling:** a Vercel cron job generates each day's set, and the long tutoring prompt is cached
-  to keep repeat calls cheap.
-- **Context, not copying:** uploaded homework sheets and newsletters are passed in as reference for
-  topic and level only. The prompt tells the model to write original questions rather than reuse them.
+It's the same idea I use at work, just at the kitchen table. The curriculum benchmarks are defined once. Every
+question points back to one, every mistake is logged against one, and progress is measured against them instead
+of against whatever the last worksheet happened to cover.
 
-## Why it connects to the rest of my work
+The AI handles the judgement calls: reading an answer, naming the misconception, writing a good hint. Code handles
+the things that have to be exactly right. And I always get the final say.
 
-It's the same idea as a governed semantic layer, at kitchen-table scale. The curriculum benchmarks are
-defined once, every generated question points back to the benchmark it serves, and progress is
-measured against those definitions rather than against whatever the last worksheet happened to cover.
+More on the marking: [Teaching a homework app to notice why, not just whether](/blog/a-tutor-that-notices-why/).

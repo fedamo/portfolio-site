@@ -1,6 +1,6 @@
 ---
-title: "Migrating BI semantic models to a cloud data platform, with zero visible change"
-summary: "Moved production BI semantic models from a legacy warehouse to a cloud data platform's gold layer with zero visible change. Because the models lived as code in Git, a fix discovered in one model could be applied to all of them at scale."
+title: "Moving BI models to a new warehouse without anyone noticing"
+summary: "I moved production Power BI models from Synapse to Snowflake's gold layer. Same numbers, same security, same reports. Because the models lived as code in Git, a fix found in one could be rolled out to all of them."
 pubDate: 2026-11-21
 status: live
 stack: [Power BI (PBIP/TMDL), Snowflake, Azure Synapse, Git, Azure DevOps, Python, REST APIs, Claude Code]
@@ -10,85 +10,68 @@ skills: ["Data migration", "Metrics-as-code", "Fix once, apply at scale", "CI/CD
 draft: false
 ---
 
+## What we were trying to do
 
-## The goal
+We had a set of production Power BI models reading from a legacy Synapse warehouse. They needed to move to
+Snowflake and read from its gold layer instead. The rule was simple: users shouldn't notice. Same numbers,
+same row-level security, same report behaviour.
 
-A set of production BI semantic models read from a legacy cloud warehouse. They needed to move to a modern
-cloud data platform, reading from its curated **gold layer**, with one hard rule: **report users should see no
-difference.** Same numbers, same row-level security, same report behaviour.
+While we were in there, I also wanted the models to stop hard-coding their connections, so the same model
+could be promoted from dev to test to prod through CI/CD.
 
-Along the way the models had to become **environment-agnostic**, so one definition can move from dev to test
-to production through CI/CD instead of being edited by hand for each environment.
+## How I worked through each model
 
-## A repeatable path, one model at a time
+Every model went through the same steps:
 
-Every model followed the same nine steps, which turned a risky migration into a process:
+1. **Map the sources.** List every query in the model, find its gold-layer equivalent, and flag anything
+   with no match.
+2. **Work on a branch.** Each model got its own Git branch. If prod changed during the work, I merged that
+   back in so nothing got lost.
+3. **Rewrite the queries.** Swap the old sources for native Snowflake queries, with server, warehouse and
+   database as parameters instead of hard-coded names. That's what makes one model work in every environment.
+4. **Match the data types.** Make sure every column comes in as the same type as prod, with an agreed
+   standard for ID columns.
+5. **Fill the gaps.** Where the gold layer was missing something, write the new or extended view, with a
+   rollback script, test it against the old source, and document it.
+6. **Check the data first.** Compare old and new queries in SQL: row counts, distinct keys, totals and
+   checksums. If the data doesn't match here, there's no point looking at reports.
+7. **Publish and compare.** Publish to a dev workspace through the REST APIs (no manual desktop step), refresh,
+   then compare every table, column, measure and value profile against prod.
+8. **Explain every difference.** Each one gets a label: by design, data timing, already in prod, or still
+   open. Recurring ones go in a shared tracker with the root cause.
+9. **Get sign-off.** A short summary for the business owner covering what's done, what's different and why,
+   and any decisions they need to make.
 
-1. **Inventory and mapping.** List every source query, map each legacy table or view to its gold-layer
-   equivalent, and flag gaps where the gold layer had no match.
-2. **Branch and stay current.** Do the work on a dedicated Git branch, check it against production
-   regularly, and merge in any production changes made mid-project so nothing is lost.
-3. **Convert the queries.** Rewrite the sources as native warehouse queries, driven by parameters for
-   server, warehouse and database rather than hard-coded names. This is what makes one model definition
-   run anywhere.
-4. **Match production types.** Make every column load with the same data type as production, following an
-   agreed standard for ID columns.
-5. **Fill gold-layer gaps.** Where the gold layer was missing something, draft new or extended views with
-   rollback scripts, test them against the legacy source first, and document each one.
-6. **Prove parity at the source.** Compare old and new queries directly in SQL: row counts, distinct keys,
-   totals and checksum-style fingerprints. The data has to match before any report is involved.
-7. **Publish and test automatically.** Publish the converted model to a dev workspace through REST APIs, with no
-   manual desktop step. Then bind its data sources, refresh it, and run a structural test plus a full comparison
-   against production: every table, column, measure and value profile.
-8. **Explain every difference.** Classify each one as by design, data timing, already present in
-   production, or open. Recurring patterns go into a shared tracker with root causes, so later models reuse
-   the explanation.
-9. **Sign-off.** A short pass summary for the business owner: current state, known differences (impact,
-   why, examples) and any decisions needed. Then track it through feedback to deployment.
+## The best part: fix it once, roll it out everywhere
 
-## The best part: fix it once, apply it everywhere
+Every model was saved in Power BI's text-based project format (PBIP/TMDL), so it was just files in Git, not
+a binary blob. That changed everything.
 
-Each model was saved in Power BI's text-based project format (PBIP, with TMDL model definitions), so every
-model was plain text in Git rather than a binary file. That changed the economics of the whole project.
+When something broke in one model, like a type mismatch, a query that didn't follow the parameter pattern, or
+something the database rename broke, I fixed it once and proved it with the parity checks. Then I could apply
+the same fix to every other model, review it as a diff, and re-run the same checks.
 
-When a problem surfaced in one model (a column type that didn't match production, a query that didn't
-follow the parameter standard, a pattern that broke on the renamed databases), the fix was worked out once,
-in that model, and checked with the parity tests. Then, because every other model shared the same structure
-as code, the same fix could be applied across all of them at scale, reviewed as a diff in Git, and re-tested
-the same way.
+The shared tracker did the same for the "why". Once a root cause was written down, the next model didn't have
+to rediscover it. Each model made the next one quicker.
 
-The shared issue tracker did the same for knowledge: the root cause and the fix were written down once and
-reused by every later model. Each model made the next one faster and safer, instead of every migration
-starting from scratch.
+## What made it tricky
 
-## Harder moments
+- **Some models stayed mixed-source** on purpose, with a few tables still on other SQL databases. I documented
+  those so they'd be handled properly when promoted.
+- **The databases were renamed mid-project.** Every model's parameters and branches had to be updated, and the
+  rename caused a misleading gateway error that took some digging to trace.
+- **Some problems were already in prod.** Duplicate keys were breaking production refreshes. I kept those
+  separate from migration issues and re-tested once they were fixed upstream.
+- **Row-level security was checked properly:** who can see what, not just whether the row counts matched.
 
-- **Mixed-source models.** Some models deliberately kept certain tables on other databases; documented so
-  they're handled correctly at promotion.
-- **The platform changed mid-project.** Databases were renamed to a new naming standard. Every model's
-  parameters and branches were updated, and a misleading gateway error caused by the rename was diagnosed.
-- **Problems that were already in production**, such as duplicate keys breaking production refreshes, were kept
-  separate from migration issues and re-tested once fixed upstream.
-- **Security checked properly.** Row-level security was verified at the level of who can see what, not just
-  row counts.
+## Where it landed
 
-## Outcome
-
-Most models reached full or near-full parity with production, with **every remaining difference explained**,
-and several were approved for deployment. The process, scripts and documentation are reusable for the rest.
-
-## How it connects to Defined Once
-
-Migration is where definitions quietly drift: a type changes, a join moves, a filter gets lost. Treating
-the models as code (text-based model definitions in Git, parameterised queries, automated comparisons) means
-the definition that users trust stays the same one, wherever it runs.
+Most models reached full or near-full parity, with every remaining difference explained, and several were
+approved for deployment. The scripts and docs can be reused for the rest.
 
 ## Tools
 
-- **BI:** Power BI Desktop and Service, PBIP/TMDL text-based model definitions, Power Query (M), DAX
-- **Data platforms:** Snowflake (bronze, silver, gold layers), Azure Synapse (legacy), SQL Server
-- **Source control and tracking:** Git, Azure DevOps (repos, branches, work items, boards)
-- **APIs:** Power BI and Microsoft Fabric REST APIs (publish, parameters, refresh, DAX queries), on-premises data gateway
-- **Automation:** Python scripts for publishing, drift checks, post-publish steps and parity comparisons
-- **Documentation:** a knowledge base with per-model notes, an issue tracker and a status board
-- **AI assistance:** Claude Code, for analysis, scripting, validation and drafting documentation
+Power BI (Desktop and Service, PBIP/TMDL, Power Query, DAX), Snowflake (bronze, silver and gold layers),
+Azure Synapse, SQL Server, Git, Azure DevOps, the Power BI and Fabric REST APIs, the on-premises data gateway,
+Python, the Azure CLI and Claude Code. Claude Code helped with analysis, scripting, validation and
+first drafts of the documentation.
