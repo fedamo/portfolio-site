@@ -5,4 +5,6 @@ pubDate: 2026-11-10
 path: "dashboards/claims-trend/"
 tools: [D3, Astro]
 syntheticData: true
+sketch: chart
+skills: ["Data visualisation", "D3.js", "Interactive analytics"]
 ---

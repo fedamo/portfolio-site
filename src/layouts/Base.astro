@@ -1,11 +1,12 @@
 ---
 import '../styles/global.css';
+import SketchDefs from '../components/SketchDefs.astro';
 interface Props { title: string; description?: string }
-const { title, description = 'Defined Once: governed, natural-language analytics on Snowflake, by Waylon Sittampalam.' } = Astro.props;
+const { title, description = 'Defined Once: notes on governed analytics, semantic layers and building with AI, by Waylon Sittampalam.' } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const path = Astro.url.pathname;
 const nav = [
-  { href: `${base}/blog/`, label: 'Blog' },
+  { href: `${base}/blog/`, label: 'Writing' },
   { href: `${base}/projects/`, label: 'Projects' },
   { href: `${base}/dashboards/`, label: 'Dashboards' },
 ];
@@ -24,16 +25,17 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600&display=swap" />
     <link rel="alternate" type="application/rss+xml" title="Defined Once" href={`${base}/rss.xml`} />
     <link rel="sitemap" href={`${base}/sitemap-index.xml`} />
   </head>
   <body>
+    <SketchDefs />
     <header class="site-header">
       <nav>
-        <a class="brand" href={`${base}/`}>
-          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" /><path d="M8 12h16M8 20h16" /></svg>
-          Defined Once
-        </a>
+        <a class="brand" href={`${base}/`}>Defined Once</a>
         {nav.map((n) => (
           <a href={n.href} aria-current={path.startsWith(n.href) ? 'page' : undefined}>{n.label}</a>
         ))}
@@ -41,12 +43,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     </header>
     <main><slot /></main>
     <footer class="site-footer">
-      <div class="footer-links">
-        {nav.map((n) => <a href={n.href}>{n.label}</a>)}
-        <a href={`${base}/rss.xml`}>RSS</a>
-        <a href="https://github.com/fedamo/portfolio-site">Source</a>
-      </div>
-      <p>© {new Date().getFullYear()} Waylon Sittampalam · Defined Once</p>
+      <span>© {new Date().getFullYear()} Waylon Sittampalam</span>
+      <a href={`${base}/rss.xml`}>RSS</a>
+      <a href="https://github.com/fedamo/portfolio-site">Source</a>
     </footer>
   </body>
 </html>

@@ -4,6 +4,7 @@ description: "How I turned a family practice-question generator into a tutor tha
 pubDate: 2026-11-10
 tags: [ai, claude, side-project, learning]
 draft: false
+sketch: worksheet
 ---
 
 

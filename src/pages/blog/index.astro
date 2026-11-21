@@ -1,14 +1,19 @@
 ---
 import Base from '../../layouts/Base.astro';
-import PostCard from '../../components/PostCard.astro';
-import { getPosts, base } from '../../lib';
+import EntryRow from '../../components/EntryRow.astro';
+import { getPosts, base, fmt, readingTime } from '../../lib';
 const posts = await getPosts();
 ---
-<Base title="Blog · Defined Once" description="Building governed analytics in public, one stage at a time.">
+<Base title="Writing · Defined Once" description="Building governed analytics in public, and what I learn using AI to do it.">
   <header class="page-head">
-    <h1>Blog</h1>
-    <p class="post-dek">Building governed analytics in public, and what I learn using AI to do it.</p>
-    <p class="muted"><a href={`${base}/rss.xml`}>Subscribe via RSS</a></p>
+    <h1>Writing</h1>
+    <p class="page-dek">Building governed analytics in public, and what I learn using AI to do it.</p>
+    <p class="hero-links"><a href={`${base}/rss.xml`}>Subscribe via RSS</a></p>
   </header>
-  <div class="card-list">{posts.map((p) => <PostCard post={p} />)}</div>
+  <section class="list-section">
+    {posts.map((p) => (
+      <EntryRow href={`${base}/blog/${p.id}/`} title={p.data.title} summary={p.data.description}
+        meta={`${fmt(p.data.pubDate)} · ${readingTime(p.body)} min read`} sketch={p.data.sketch} draft={p.data.draft} />
+    ))}
+  </section>
 </Base>

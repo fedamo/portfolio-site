@@ -5,6 +5,7 @@ pubDate: 2026-11-16
 stage: 0
 tags: [semantic-layer, snowflake, cortex]
 draft: true
+sketch: layers
 ---
 
 <!--

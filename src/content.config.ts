@@ -1,6 +1,11 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+// Pencil sketches available to posts, projects and dashboards (see src/components/Sketch.astro).
+const sketch = z.enum(['worksheet', 'layers', 'book', 'chart', 'kpi', 'notebook', 'chat', 'pipeline']).optional();
+// High-level skills a project or dashboard demonstrates, shown under its summary.
+const skills = z.array(z.string()).max(5).default([]);
+
 // Blog posts: one Markdown file per post in src/content/blog/
 const blog = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
@@ -11,6 +16,7 @@ const blog = defineCollection({
     updatedDate: z.coerce.date().optional(),
     stage: z.number().int().min(0).max(7).optional(), // portfolio build stage 0-7
     tags: z.array(z.string()).default([]),
+    sketch,
     draft: z.boolean().default(false), // drafts show in `npm run dev`, never in the deployed site
   }),
 });
@@ -26,6 +32,8 @@ const dashboards = defineCollection({
     path: z.string(), // e.g. "dashboards/sample-metrics/index.html" (relative to the site base)
     tools: z.array(z.string()).default([]),
     syntheticData: z.boolean().default(true),
+    sketch,
+    skills,
     draft: z.boolean().default(false),
   }),
 });
@@ -43,6 +51,8 @@ const projects = defineCollection({
     repoUrl: z.string().url().optional(), // only for public repos
     demoUrl: z.string().url().optional(),
     featured: z.boolean().default(false), // featured projects show on the home page
+    sketch,
+    skills,
     draft: z.boolean().default(false),
   }),
 });

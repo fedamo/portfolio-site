@@ -1,0 +1,15 @@
+---
+// One row in a list of posts, projects or dashboards: text on the left, sketch on the right.
+import Sketch from './Sketch.astro';
+interface Props { href: string; title: string; summary: string; meta?: string; skills?: string[]; sketch?: string; draft?: boolean; level?: 'post' | 'item' }
+const { href, title, summary, meta, skills = [], sketch, draft, level = 'post' } = Astro.props;
+---
+<article class={`entry entry-${level}`}>
+  <div class="entry-text">
+    {meta && <p class="entry-meta">{meta}{draft && <span class="draft">draft</span>}</p>}
+    <h3><a href={href}>{title}</a></h3>
+    <p class="entry-summary">{summary}</p>
+    {skills.length > 0 && <p class="entry-skills">{skills.join(' · ')}</p>}
+  </div>
+  <Sketch name={sketch} size={level === 'post' ? 'md' : 'sm'} />
+</article>

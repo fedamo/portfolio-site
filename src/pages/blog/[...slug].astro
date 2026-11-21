@@ -26,7 +26,7 @@ const d = post.data;
         <span class="sep">·</span><span>{readingTime(post.body)} min read</span>
         {d.stage !== undefined && <><span class="sep">·</span><span>Stage {d.stage}</span></>}
         {d.tags.length > 0 && <span class="sep">·</span>}
-        {d.tags.map((t) => <span class="tag">{t}</span>)}
+        {d.tags.length > 0 && <span>{d.tags.join(', ')}</span>}
       </div>
     </header>
     <div class="prose">

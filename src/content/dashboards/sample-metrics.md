@@ -5,4 +5,6 @@ pubDate: 2026-11-10
 path: "dashboards/sample-metrics/index.html"
 tools: [HTML, SVG]
 syntheticData: true
+sketch: kpi
+skills: ["Governed metrics", "Metric definitions", "Dashboard design"]
 ---

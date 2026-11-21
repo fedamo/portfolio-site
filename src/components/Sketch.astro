@@ -1,0 +1,50 @@
+---
+// Reusable coloured pencil sketches. Pick one per post/project/dashboard with `sketch:` in frontmatter.
+interface Props { name?: string; size?: 'md' | 'sm' }
+const { name, size = 'md' } = Astro.props;
+const w = size === 'sm' ? 104 : 150;
+const h = size === 'sm' ? 78 : 110;
+---
+{name && (
+<svg class="sketch" viewBox="0 0 150 110" width={w} height={h} aria-hidden="true" focusable="false">
+  {name === 'worksheet' && (<>
+    <ellipse cx="72" cy="58" rx="58" ry="44" class="w-ochre" filter="url(#wash)" />
+    <g class="sk" filter="url(#pencil2)"><path d="M40 14 h56 l12 12 v66 h-68 z" /><path d="M96 14 v12 h12" /><path d="M50 38 h40 M50 50 h30 M50 62 h36" /></g>
+    <path d="M52 78 l7 7 l14 -15" class="sk-teal" filter="url(#pencil2)" />
+    <path d="M118 52 c4 -9 16 -7 14 2 c-1 6 -7 7 -7 12 M125 76 v1" class="sk-coral" filter="url(#pencil2)" />
+  </>)}
+  {name === 'layers' && (<>
+    <g filter="url(#wash)"><path d="M75 30 l52 18 l-52 18 l-52 -18 z" class="w-blue" /><path d="M23 66 l52 18 l52 -18 l0 10 l-52 18 l-52 -18 z" class="w-teal" /></g>
+    <g class="sk" filter="url(#pencil2)"><path d="M75 12 l52 18 l-52 18 l-52 -18 z" /><path d="M23 48 l52 18 l52 -18" /><path d="M23 66 l52 18 l52 -18" /><path d="M23 30 v36 M127 30 v36" /></g>
+    <path d="M75 12 l52 18 l-52 18 l-52 -18 z" fill="url(#hatch)" filter="url(#pencil2)" />
+  </>)}
+  {name === 'book' && (<>
+    <ellipse cx="75" cy="58" rx="58" ry="40" class="w-ochre" filter="url(#wash)" />
+    <g class="sk" filter="url(#pencil2)"><path d="M75 28 c-16 -12 -36 -12 -52 -4 v62 c16 -8 36 -8 52 4 c16 -12 36 -12 52 -4 v-62 c-16 -8 -36 -8 -52 4 z" /><path d="M75 28 v62" /></g>
+    <path d="M90 44 h22 M90 56 h18" class="sk-coral" filter="url(#pencil2)" />
+  </>)}
+  {name === 'chart' && (<>
+    <ellipse cx="78" cy="60" rx="58" ry="40" class="w-teal" filter="url(#wash)" />
+    <g class="sk" filter="url(#pencil2)"><path d="M20 96 h112 M20 96 v-84" /><path d="M34 96 v-28 M54 96 v-40 M74 96 v-32 M94 96 v-56 M114 96 v-48" /></g>
+    <path d="M30 46 l20 -12 l20 8 l20 -20 l24 8" class="sk-coral" filter="url(#pencil2)" />
+  </>)}
+  {name === 'kpi' && (<>
+    <ellipse cx="75" cy="56" rx="60" ry="40" class="w-blue" filter="url(#wash)" />
+    <g class="sk" filter="url(#pencil2)"><rect x="14" y="16" width="56" height="36" rx="5" /><rect x="80" y="16" width="56" height="36" rx="5" /><rect x="14" y="60" width="122" height="34" rx="5" /><path d="M26 40 h24 M92 40 h28 M26 78 h56" /></g>
+    <rect x="80" y="16" width="56" height="36" rx="5" fill="url(#hatch)" filter="url(#pencil2)" />
+  </>)}
+  {name === 'notebook' && (<>
+    <ellipse cx="75" cy="56" rx="56" ry="40" class="w-blue" filter="url(#wash)" />
+    <g class="sk" filter="url(#pencil2)"><rect x="36" y="14" width="78" height="82" rx="5" /><path d="M48 34 h54 M48 48 h42 M48 62 h50 M48 76 h34" /><path d="M36 26 h-6 M36 46 h-6 M36 66 h-6 M36 86 h-6" /></g>
+  </>)}
+  {name === 'chat' && (<>
+    <ellipse cx="75" cy="54" rx="60" ry="40" class="w-coral" filter="url(#wash)" />
+    <g class="sk" filter="url(#pencil2)"><path d="M28 18 h94 a8 8 0 0 1 8 8 v44 a8 8 0 0 1 -8 8 h-58 l-18 16 v-16 h-18 a8 8 0 0 1 -8 -8 v-44 a8 8 0 0 1 8 -8 z" /><path d="M42 40 h66 M42 56 h44" /></g>
+  </>)}
+  {name === 'pipeline' && (<>
+    <ellipse cx="75" cy="56" rx="62" ry="36" class="w-teal" filter="url(#wash)" />
+    <g class="sk" filter="url(#pencil2)"><rect x="10" y="40" width="34" height="30" rx="5" /><rect x="58" y="40" width="34" height="30" rx="5" /><rect x="106" y="40" width="34" height="30" rx="5" /><path d="M44 55 h14 M92 55 h14 M52 50 l6 5 l-6 5 M100 50 l6 5 l-6 5" /></g>
+    <path d="M114 56 l6 6 l12 -12" class="sk-teal" filter="url(#pencil2)" />
+  </>)}
+</svg>
+)}

@@ -6,6 +6,8 @@ status: in-progress   # change to "live" if it's in daily use
 stack: [Next.js, TypeScript, PostgreSQL, Prisma, Claude API, Vercel]
 featured: true
 draft: false
+sketch: book
+skills: ["AI product design", "Structured LLM outputs", "Human-in-the-loop", "Claude API"]
 ---
 
 

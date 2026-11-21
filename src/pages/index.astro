@@ -1,53 +1,41 @@
 ---
 import Base from '../layouts/Base.astro';
-import PostCard from '../components/PostCard.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import DashboardCard from '../components/DashboardCard.astro';
-import { getPosts, getDashboards, getProjects, base } from '../lib';
-const posts = (await getPosts()).slice(0, 3);
-const dashboards = (await getDashboards()).slice(0, 2);
-const projects = (await getProjects()).filter((p) => p.data.featured).slice(0, 2);
+import HeroSketch from '../components/HeroSketch.astro';
+import EntryRow from '../components/EntryRow.astro';
+import { getPosts, getDashboards, getProjects, base, fmt, readingTime } from '../lib';
+const posts = (await getPosts()).slice(0, 4);
+const projects = (await getProjects()).filter((p) => p.data.featured);
+const dashboards = await getDashboards();
 ---
 <Base title="Defined Once · Waylon Sittampalam">
   <section class="hero">
-    <p class="eyebrow">Governed analytics · Snowflake · AI</p>
-    <h1>Define it once.<br />Trust it everywhere.</h1>
+    <h1>Notes on governed analytics, semantic layers and building with AI.</h1>
     <p class="hero-lede">
-      I build governed, natural-language analytics: metrics defined once in a semantic layer, agents that
-      answer from those definitions, and checks that make every answer verifiable.{' '}
-      <strong>Fix the layer, not the prompt.</strong>
+      I'm Waylon Sittampalam, an analytics engineer in Cary, NC. I write about defining metrics once and making
+      every answer checkable — on Snowflake, in Power BI, and with AI agents. Fix the layer, not the prompt.
     </p>
-    <p class="hero-by">
-      Waylon Sittampalam · analytics engineer in Cary, NC ·{' '}
-      <a href={`${base}/blog/`}>Read the blog</a>
-    </p>
+    <p class="hero-links"><a href={`${base}/rss.xml`}>Subscribe via RSS</a></p>
+    <HeroSketch />
   </section>
 
-  <section class="section">
-    <div class="section-head">
-      <h2>Latest writing</h2>
-      <a href={`${base}/blog/`}>All posts →</a>
-    </div>
-    {posts.length === 0 ? <p class="muted">First post coming soon.</p> : (
-      <div class="card-list">{posts.map((p) => <PostCard post={p} />)}</div>
-    )}
+  <section class="list-section">
+    <h2 class="label">Writing</h2>
+    {posts.length === 0 ? <p class="muted">First post coming soon.</p> : posts.map((p) => (
+      <EntryRow href={`${base}/blog/${p.id}/`} title={p.data.title} summary={p.data.description}
+        meta={`${fmt(p.data.pubDate)} · ${readingTime(p.body)} min read`} sketch={p.data.sketch} draft={p.data.draft} />
+    ))}
+    <p class="more"><a href={`${base}/blog/`}>All writing →</a></p>
   </section>
 
-  {projects.length > 0 && (
-    <section class="section">
-      <div class="section-head">
-        <h2>Projects</h2>
-        <a href={`${base}/projects/`}>All projects →</a>
-      </div>
-      <div class="card-list">{projects.map((p) => <ProjectCard project={p} />)}</div>
-    </section>
-  )}
-
-  <section class="section">
-    <div class="section-head">
-      <h2>Sample dashboards</h2>
-      <a href={`${base}/dashboards/`}>All dashboards →</a>
-    </div>
-    <div class="card-grid">{dashboards.map((d) => <DashboardCard item={d} />)}</div>
+  <section class="list-section">
+    <h2 class="label">Projects &amp; dashboards</h2>
+    {projects.map((p) => (
+      <EntryRow level="item" href={`${base}/projects/${p.id}/`} title={p.data.title} summary={p.data.summary}
+        skills={p.data.skills} sketch={p.data.sketch} draft={p.data.draft} />
+    ))}
+    {dashboards.map((d) => (
+      <EntryRow level="item" href={`${base}/${d.data.path}`} title={d.data.title} summary={d.data.description}
+        skills={d.data.skills} sketch={d.data.sketch} draft={d.data.draft} />
+    ))}
   </section>
 </Base>

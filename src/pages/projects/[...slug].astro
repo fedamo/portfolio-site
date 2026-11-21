@@ -21,9 +21,9 @@ const d = project.data;
         <span class="status">{statusLabel[d.status]}</span>
         {d.demoUrl && <><span class="sep">·</span><a href={d.demoUrl}>Live demo</a></>}
         {d.repoUrl && <><span class="sep">·</span><a href={d.repoUrl}>Code</a></>}
-        {d.stack.length > 0 && <span class="sep">·</span>}
-        {d.stack.map((t) => <span class="tag">{t}</span>)}
+        {d.stack.length > 0 && <><span class="sep">·</span><span>{d.stack.join(', ')}</span></>}
       </div>
+      {d.skills.length > 0 && <p class="entry-skills">{d.skills.join(' · ')}</p>}
     </header>
     <div class="prose">
       <Content />
