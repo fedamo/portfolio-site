@@ -85,7 +85,7 @@ Brazil component goes ashy if pushed darker.
 This is the same work as governed analytics, at kitchen-counter scale. "Development time" only means
 something if it's measured the same way every roast, from first crack to drop, so it's defined once in the
 roast record and every comparison uses it. The AI advises; the data and the safety checks decide. And when
-advice was wrong, the fix went into the data and the tools, not into a cleverer prompt.
+advice was wrong, the fix went into the data and the tools.
 
 ## What's next
 

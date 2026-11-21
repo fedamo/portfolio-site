@@ -9,7 +9,7 @@ sketch: worksheet
 
 
 I built a small web app for my family that turns a school curriculum into daily practice questions.
-It worked, but it had a blind spot that any human tutor would spot straight away: it could tell
+It worked, but it had a blind spot any human tutor would notice straight away: it could tell
 whether an answer was right, but not *why* it was wrong. This post is about closing that gap.
 
 ## Version 1: curriculum in, questions out
@@ -21,9 +21,9 @@ The first version did three things:
   started, in progress or achieved.
 - **Wrote daily practice.** Every morning it generates a short set of questions per subject, each tied
   to a benchmark the child hasn't mastered yet.
-- **Wrote them like a tutor.** Not just "what is 27 + 14?", but word problems, "solve it two ways",
-  "spot the mistake in this other student's working", and short original reading passages with a
-  question that needs one specific skill.
+- **Wrote them like a tutor.** Word problems, "solve it two ways", "spot the mistake in this other
+  student's working", and short original reading passages with a question that needs one specific
+  skill, instead of a page of plain sums.
 
 A parent then read out the question and tapped *Correct* or *Incorrect*.
 
@@ -43,8 +43,8 @@ Now the child types the answer into the app, and four things happen.
 
 1. **The answer is marked.** Claude compares it with the expected answer and the benchmark, and
    returns a verdict (correct, partly right or not yet) using a fixed, validated format rather than
-   free text. It marks understanding, not spelling or wording.
-2. **The child gets a hint, not the answer.** A short, encouraging message plus one hint that points
+   free text. It marks understanding and ignores spelling and wording.
+2. **The child gets a hint first.** A short, encouraging message plus one hint that points
    at the misunderstanding without giving the answer away, then one more try. The full worked answer
    only appears after that.
 3. **The parent sees the likely misconception.** For example: *"Added the tens without carrying the
@@ -64,8 +64,8 @@ A few deliberate choices:
   the answer can't be marked correct, whatever the model said.
 - **Parents always win.** Any marking can be overridden with one tap, and the app records whether a
   result came from the AI or a parent. That gives me a running count of how often the AI misjudges.
-- **The child's answer is data, not instructions.** It's wrapped and labelled in the prompt so that
-  whatever a child types is only ever marked, never obeyed.
+- **The child's answer is treated as data.** It's wrapped and labelled in the prompt, so whatever a
+  child types gets marked and is never followed as an instruction.
 - **Family data stays private.** The app is password-protected and built for one family. Nothing on
   this page comes from real answers.
 

@@ -26,7 +26,7 @@ An end-to-end, open-source build on Snowflake, using public insurance claims dat
 1. Ingest the raw data with dlt.
 2. Model it into a star schema with dbt Core, with tests on grain and uniqueness.
 3. Define every metric once, as versioned YAML that generates Snowflake Semantic Views.
-4. Let Cortex Agents answer questions from those definitions, not from the raw tables.
+4. Let Cortex Agents answer questions from those definitions instead of the raw tables.
 5. Put it in front of users with a Streamlit app that shows the answer, the SQL and the rule.
 6. Make it checkable: verified queries, contract tests and an evaluation report.
 
