@@ -7,13 +7,9 @@ stack: [Power BI (PBIP/TMDL), Snowflake, Azure Synapse, Git, Azure DevOps, Pytho
 featured: true
 sketch: layers
 skills: ["Data migration", "Metrics-as-code", "CI/CD", "Automated parity testing", "Data governance"]
-draft: true
+draft: false
 ---
 
-<!--
-  DRAFT: work project, described without the employer or any internal names.
-  Check this is OK to publish under your employer's policies, then set draft: false.
--->
 
 ## The goal
 
