@@ -54,14 +54,20 @@ the same fix to every other model, review it as a diff, and re-run the same chec
 The shared tracker did the same for the "why". Once a root cause was written down, the next model didn't have
 to rediscover it. Each model made the next one quicker.
 
+## A bonus: it found problems in prod
+
+Comparing every table, column and value against production doesn't just check the new model. It shines a light on
+the old one too. Along the way the checks turned up issues that were already sitting in production, like duplicate
+values in keys that should have been unique, which were quietly breaking refreshes. I flagged each one to the owners
+with the evidence, kept them separate from migration differences, and re-tested once they were fixed upstream. So the
+business ended up with cleaner production models, not just migrated ones.
+
 ## What made it tricky
 
 - **Some models stayed mixed-source** on purpose, with a few tables still on other SQL databases. I documented
   those so they'd be handled properly when promoted.
 - **The databases were renamed mid-project.** Every model's parameters and branches had to be updated, and the
   rename caused a misleading gateway error that took some digging to trace.
-- **Some problems were already in prod.** Duplicate keys were breaking production refreshes. I kept those
-  separate from migration issues and re-tested once they were fixed upstream.
 - **Row-level security was checked properly:** who can see what, not just whether the row counts matched.
 
 ## Where it landed
