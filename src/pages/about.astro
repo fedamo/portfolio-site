@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro';
+import Sketch from '../components/Sketch.astro';
+import { base, links } from '../lib';
+---
+<Base title="About · Defined Once" description="Waylon Sittampalam: analytics engineer in Cary, NC, writing about governed analytics, semantic layers and building with AI.">
+  <header class="page-head about-head">
+    <div>
+      <h1>About</h1>
+      <p class="page-dek">I'm Waylon Sittampalam, an analytics engineer in Cary, North Carolina.</p>
+    </div>
+    <Sketch name="layers" />
+  </header>
+
+  <div class="prose">
+    <p>
+      I've spent 13 years in analytics — econometrics and forecasting in London, then BI and data modelling in the US.
+      Today I'm a senior BI developer working with Power BI, SQL and Snowflake, and moving deeper into governed
+      semantic layers and AI-assisted analytics.
+    </p>
+
+    <h2>What I care about</h2>
+    <p>
+      Business users ask the same question and get different answers, because "revenue" is defined five ways across
+      five dashboards. Pointing an AI at the raw tables makes it worse. My answer is to define each metric once, in a
+      governed layer, and make every answer checkable against it. When something is wrong, I fix the layer, not the
+      prompt. That's where the name <em>Defined Once</em> comes from.
+    </p>
+
+    <h2>How I work</h2>
+    <p>
+      I work AI-native: I write the spec, hand AI agents the end-to-end build — exploring data, writing models, tests
+      and documentation — and review their output to the same standard as a teammate's. The checks that matter are
+      deterministic code, not the model's opinion of itself.
+    </p>
+
+    <h2>What I'm building</h2>
+    <ul>
+      <li><a href={`${base}/projects/family-learning-tracker/`}>Family Learning Tracker</a> — an AI tutor that marks answers, finds the misconception behind a mistake and targets it the next day.</li>
+      <li>Python tooling that checks Power BI semantic models as code: model numbers against source data, and model definitions against naming and query standards.</li>
+      <li>A public, end-to-end build of governed natural-language analytics on Snowflake, written up on this blog as it happens.</li>
+    </ul>
+
+    <h2>Background</h2>
+    <p>MSc in Finance and Econometrics (Queen Mary University of London) and a BSc in Mathematics (City University).</p>
+  </div>
+
+  <div class="post-footer">
+    <p class="about-links">
+      {links.linkedin && <a href={links.linkedin} rel="me">LinkedIn</a>}
+      <a href={`${base}/blog/`}>Read the writing</a>
+      <a href={`${base}/rss.xml`}>RSS</a>
+    </p>
+  </div>
+</Base>

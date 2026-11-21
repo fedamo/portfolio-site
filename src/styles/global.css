@@ -41,7 +41,7 @@ h1, h2, h3 { font-family: var(--serif); color: var(--fg); }
 .hero { padding: 64px 0 40px; border-bottom: 1px solid var(--line); }
 .hero h1 { margin: 0 0 18px; font-size: clamp(32px, 6vw, 46px); line-height: 1.12; font-weight: 600; letter-spacing: -0.01em; }
 .hero-lede { margin: 0 0 16px; font-family: var(--serif); font-size: clamp(18px, 2.6vw, 21px); line-height: 1.55; color: var(--text); }
-.hero-links { margin: 0; font-size: 15px; }
+.hero-links { margin: 0; font-size: 15px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .hero-sketch { margin: 28px 0 0; }
 .hero-sketch figcaption { margin-top: 8px; text-align: center; font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--muted); }
 
@@ -129,4 +129,15 @@ h1, h2, h3 { font-family: var(--serif); color: var(--fg); }
   .site-header nav { gap: 6px 14px; padding-top: 18px; padding-bottom: 16px; }
   .site-header a { font-size: 14px; }
   .site-header a.brand { font-size: 19px; }
+}
+
+/* About page */
+.about-head { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 32px; }
+.about-head > div { flex: 1 1 380px; min-width: 0; }
+.about-links { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 15px; margin: 0; }
+@media (max-width: 480px) { .site-header nav { gap: 6px 12px; } .site-header a { font-size: 13.5px; } }
+@media (max-width: 520px) {
+  .site-header a.brand { flex-basis: 100%; margin-bottom: 2px; }
+  .site-header nav { gap: 4px 18px; }
+  .site-header a { font-size: 14.5px; }
 }

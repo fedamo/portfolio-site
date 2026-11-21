@@ -1,3 +1,8 @@
+// Your public profile links. Leave a value empty to hide that link everywhere.
+export const links = {
+  linkedin: '', // e.g. 'https://www.linkedin.com/in/your-handle/'
+};
+
 import { getCollection } from 'astro:content';
 
 // Drafts are visible in `npm run dev` but excluded from production builds.
