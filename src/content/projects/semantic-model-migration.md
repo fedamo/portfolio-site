@@ -50,6 +50,8 @@ When something broke in one model, like a type mismatch, a query that didn't fol
 something the database rename broke, I fixed it once and proved it with the parity checks. Then I could apply
 the same fix to every other model, review it as a diff, and re-run the same checks.
 
+The documentation kept up by itself. Every edit on a branch and every new or updated tool updated Markdown notes in a knowledge base automatically, so each model's notes, the issue tracker and the status board were always current.
+
 The shared tracker did the same for the "why". Once a root cause was written down, the next model didn't have
 to rediscover it. Each model made the next one quicker.
 
