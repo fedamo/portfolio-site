@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Prototype dashboard: earned premium against claims paid, loss ratio and a 12-month forecast on synthetic insurance data.">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<title>Portfolio Pulse · Defined Once</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column of decision-first bands. KPIs, then the animated premium-vs-claims chart with its loss-ratio strip, then breakdowns, then the metric definitions that feed every number. */
+/* Single deliberate look in both host themes: a deep navy hero band for the headline numbers, then white space for the analysis. */
+:root {
+  --bg: #ffffff;
+  --surface: #f1f5fb;
+  --card: #ffffff;
+  --tint: #f3f7fd;
+  --line: #dde5f0;
+  --grid: #e9eef6;
+  --ink: #0f1b33;
+  --ink-2: #44516a;
+  --ink-3: #6b7890;
+  --premium: #2a78d6;
+  --claims: #eb6834;
+  --gap: rgba(42,120,214,.10);
+  --band: rgba(42,120,214,.16);
+  --good: #1a7f4b; --good-bg: #e6f4ec;
+  --watch: #9a6400; --watch-bg: #fbf1dc;
+  --high: #bf3a35; --high-bg: #fbe8e7;
+  --focus: #2a78d6;
+  --navy: #1b3f78;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+.hero {
+  --bg: #1b4585;
+  --surface: #2a5a9f;
+  --card: #234f92;
+  --line: #4573b5;
+  --grid: #356aad;
+  --ink: #ffffff;
+  --ink-2: #dbe6f6;
+  --ink-3: #b3c7e6;
+  --premium: #8fc1ff;
+  --claims: #ffa36b;
+  --gap: rgba(255,255,255,.14);
+  --good: #7ff0b6; --good-bg: rgba(20,60,40,.45);
+  --watch: #ffd27a; --watch-bg: rgba(70,50,10,.45);
+  --high: #ffb0aa; --high-bg: rgba(90,25,30,.45);
+  --focus: #ffffff;
+  color-scheme: dark;
+  color: var(--ink);
+  background: radial-gradient(900px 420px at 10% -10%, rgba(143,193,255,.35), transparent 60%), radial-gradient(700px 380px at 100% 0%, rgba(140,120,240,.28), transparent 60%), linear-gradient(180deg, #2457a3, #1b4585) #1b4585;
+  margin-top: calc(-1 * env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.hero .seg button[aria-pressed="true"] { background: #ffffff; color: #1b4585; }
+.hero .wrap { padding-block: 36px 34px; gap: 22px; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+.num { font-variant-numeric: tabular-nums; }
+
+header { display: grid; gap: 10px; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.back { color: var(--ink-2); text-decoration: none; letter-spacing: .04em; }
+.back:hover { color: var(--ink); text-decoration: underline; }
+.sample { letter-spacing: .02em; text-transform: none; font-weight: 500; border: 1px dashed var(--watch); color: var(--watch) !important; border-radius: 999px; padding: 1px 10px; color: var(--ink-2); }
+h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(30px, 5vw, 44px); line-height: 1.1; margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--ink-2); max-width: 62ch; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: end; }
+.ctl { display: grid; gap: 6px; }
+.ctl > span { font-size: 12px; color: var(--ink-3); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; padding: 2px; gap: 2px; background: var(--surface); }
+.seg button { font: 500 13px var(--sans); color: var(--ink-2); background: transparent; border: 0; border-radius: 6px; padding: 6px 11px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--premium); color: #fff; }
+.seg button:hover { color: var(--ink); }
+button:focus-visible, input:focus-visible, summary:focus-visible, .bar-row:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); padding: 7px 0; cursor: pointer; }
+.toggle input { accent-color: var(--premium); width: 16px; height: 16px; }
+
+.period { font-size: 13px; color: var(--ink-2); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: -16px; }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.kpi { background: linear-gradient(160deg, var(--surface), var(--card)); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.kpi .lbl { font-size: 13px; color: var(--ink-2); display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.kd { display: inline-flex; align-items: center; gap: 7px; }
+.kd i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.kpi .def { font-size: 12px; color: var(--ink-3); text-decoration: underline dotted; text-underline-offset: 3px; background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--sans); }
+.kpi .val { font-family: var(--serif); font-size: clamp(24px, 3.2vw, 32px); font-weight: 600; line-height: 1.15; }
+.kpi .sub { font-size: 12px; color: var(--ink-3); min-height: 18px; }
+.kpi.fc { border-style: dashed; }
+.pill { white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 1px 8px; width: fit-content; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pill.good { color: var(--good); background: var(--good-bg); }
+.pill.watch { color: var(--watch); background: var(--watch-bg); }
+.pill.high { color: var(--high); background: var(--high-bg); }
+.pill.fcst { color: var(--ink-2); background: var(--surface); }
+.pill.fcst::before { background: none; border: 1.5px dashed currentColor; }
+
+.chart-card { background: var(--card); box-shadow: 0 1px 2px rgba(15,27,51,.04), 0 12px 32px rgba(15,27,51,.07); border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px 12px; display: grid; gap: 10px; }
+.chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; align-items: baseline; }
+h2 { font-family: var(--serif); font-weight: 600; font-size: 21px; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--serif); font-weight: 600; font-size: 17px; margin: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 18px; height: 0; border-top: 2.5px solid; display: inline-block; }
+.sw.p { border-color: var(--premium); } .sw.c { border-color: var(--claims); }
+.sw.f { border-top-style: dashed; border-color: var(--ink-3); }
+.sw.g { height: 10px; border: 0; background: var(--gap); border-radius: 2px; }
+.plot { position: relative; min-width: 0; }
+.plot svg { display: block; width: 100%; overflow: visible; }
+.lr-title { font-size: 13px; color: var(--ink-2); font-weight: 500; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 10px 28px rgba(0,0,0,.45); min-width: 172px; display: grid; gap: 3px; z-index: 3; }
+.tip b { font-weight: 600; font-size: 13px; }
+.tip .r { display: flex; justify-content: space-between; gap: 12px; color: var(--ink-2); }
+.tip .r em { font-style: normal; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tip .k { display: inline-flex; align-items: center; gap: 6px; }
+.tip .k i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+.player { display: flex; align-items: center; gap: 12px; padding-top: 4px; border-top: 1px solid var(--grid); }
+.play { width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--premium); color: #fff; box-shadow: 0 0 0 4px var(--gap); display: grid; place-items: center; cursor: pointer; flex: none; }
+.play svg { width: 14px; height: 14px; fill: currentColor; }
+.player input[type=range] { flex: 1; min-width: 0; accent-color: var(--premium); }
+.player .when { font-size: 13px; color: var(--ink-2); width: 92px; text-align: right; flex: none; }
+
+.breakdowns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 12px; align-content: start; }
+.panel p { margin: 0; font-size: 13px; color: var(--ink-3); }
+.bars { display: grid; gap: 4px; }
+.bar-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 6px 6px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; background: none; font: inherit; color: inherit; text-align: left; }
+.bar-row:hover { background: var(--surface); }
+.bar-row[aria-pressed="true"] { border-color: var(--line); background: var(--surface); }
+.bar-row .nm { font-size: 13px; font-weight: 500; }
+.track { position: relative; height: 12px; }
+.track { background: var(--grid); border-radius: 4px; }
+.track .fill { position: absolute; left: 0; top: 2px; height: 8px; border-radius: 0 4px 4px 0; background: var(--premium); transition: width .35s ease; }
+.bar-row[aria-pressed="true"] .fill { background: var(--claims); }
+.track .tgt { position: absolute; top: -2px; bottom: -2px; width: 0; border-left: 1.5px dashed var(--ink-2); }
+.bar-row .v { min-width: 156px; display: flex; justify-content: flex-end; gap: 8px; align-items: center; font-size: 13px; }
+
+.defs { display: grid; gap: 14px; background: var(--tint); border-radius: 14px; padding: 24px clamp(16px, 3vw, 28px); }
+.defs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.defcard { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; align-content: start; transition: box-shadow .3s, border-color .3s; }
+.defcard.flash { border-color: var(--premium); box-shadow: 0 0 0 3px var(--gap); }
+.defcard code { font-family: var(--mono); font-size: 12.5px; }
+.defcard .nm { font-family: var(--mono); font-weight: 500; font-size: 13px; }
+.defcard p { margin: 0; font-size: 14px; color: var(--ink-2); }
+.defcard pre { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.55; background: var(--navy); border-radius: 6px; padding: 10px 12px; overflow-x: auto; color: #cfe0f7; }
+
+details { border-top: 1px solid var(--line); padding-top: 14px; }
+summary { cursor: pointer; font-weight: 500; font-size: 14px; }
+.tbl-wrap { overflow-x: auto; margin-top: 12px; max-height: 360px; overflow-y: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { position: sticky; top: 0; background: var(--tint); color: var(--ink-3); font-weight: 600; }
+tr.f td { color: var(--ink-3); font-style: italic; }
+footer { font-size: 12px; color: var(--ink-3); max-width: 75ch; }
+
+@media (max-width: 820px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .breakdowns, .defs-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 420px) {
+  .bar-row { grid-template-columns: 56px minmax(0, 1fr) auto; gap: 6px; }
+  .bar-row .v { min-width: 142px; }
+  .player .when { width: 76px; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero"><div class="wrap">
+  <header>
+    <div class="eyebrow"><a class="back" href="../">← All dashboards</a> · Prototype <span class="sample">Sample data: synthetic, for layout only</span></div>
+    <h1>Portfolio Pulse</h1>
+    <p class="lede">Earned premium against claims paid for a French motor, home, health and life book, January 2022 to December 2025, with a 12-month forecast. Every figure comes from one set of metric definitions, listed at the bottom.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Filters">
+    <div class="ctl"><span id="lbl-prod">Product</span><div class="seg" id="f-product" aria-labelledby="lbl-prod"></div></div>
+    <div class="ctl"><span id="lbl-zone">Risk zone</span><div class="seg" id="f-zone" aria-labelledby="lbl-zone"></div></div>
+    <div class="ctl"><span id="lbl-view">View</span><div class="seg" id="f-view" aria-labelledby="lbl-view"></div></div>
+    <label class="toggle"><input type="checkbox" id="f-fc" checked> Show 2026 forecast</label>
+  </div>
+
+  <div class="period" id="period"></div>
+  <section class="kpis" aria-label="Trailing twelve months at the playhead">
+    <div class="kpi" id="k-prem"><div class="lbl"><span class="kd"><i style="background:var(--premium)"></i>Earned premium</span><button class="def" data-def="earned_premium">Definition</button></div><div class="val num">–</div><div class="sub num"></div></div>
+    <div class="kpi" id="k-claims"><div class="lbl"><span class="kd"><i style="background:var(--claims)"></i>Claims paid</span> <button class="def" data-def="claims_paid">Definition</button></div><div class="val num">–</div><div class="sub num"></div></div>
+    <div class="kpi" id="k-lr"><div class="lbl">Loss ratio <button class="def" data-def="loss_ratio">Definition</button></div><div class="val num">–</div><div class="sub"></div></div>
+    <div class="kpi" id="k-count"><div class="lbl">Claims settled <button class="def" data-def="claim_count">Definition</button></div><div class="val num">–</div><div class="sub num"></div></div>
+  </section>
+</div></div>
+
+<div class="wrap">
+  <section class="chart-card" aria-labelledby="chart-title">
+    <div class="chart-head">
+      <h2 id="chart-title">Premium earned vs claims paid</h2>
+      <div class="legend">
+        <span><i class="sw p"></i>Earned premium</span>
+        <span><i class="sw c"></i>Claims paid</span>
+        <span><i class="sw g"></i>Underwriting margin</span>
+        <span id="lg-fc"><i class="sw f"></i>Forecast, 80% interval</span>
+      </div>
+    </div>
+    <div class="plot" id="main-plot"><svg id="main" role="img" aria-label="Line chart of monthly earned premium and claims paid"></svg><div class="tip" id="tip" hidden></div></div>
+    <div class="lr-title"><span>Loss ratio, claims paid ÷ earned premium</span><span>Dashed line: 70% target</span></div>
+    <div class="plot" id="lr-plot"><svg id="lr" role="img" aria-label="Line chart of monthly loss ratio against a 70 percent target"></svg></div>
+    <div class="player">
+      <button class="play" id="play" aria-label="Play"></button>
+      <input type="range" id="scrub" min="0" max="59" step="1" value="59" aria-label="Month">
+      <div class="when num" id="when"></div>
+    </div>
+  </section>
+
+  <section class="breakdowns">
+    <div class="panel">
+      <h3>Loss ratio by risk zone</h3>
+      <p>Trailing 12 months at the playhead. Select a zone to filter.</p>
+      <div class="bars" id="b-zone"></div>
+    </div>
+    <div class="panel">
+      <h3>Loss ratio by product</h3>
+      <p>Trailing 12 months at the playhead. Select a product to filter.</p>
+      <div class="bars" id="b-product"></div>
+    </div>
+  </section>
+
+  <section class="defs" aria-labelledby="defs-title">
+    <h2 id="defs-title">Metric definitions</h2>
+    <p class="lede">Each metric is written once in the semantic layer. The tiles, charts, breakdowns and forecast all read the same definitions, so a number never changes depending on where you look.</p>
+    <div class="defs-grid">
+      <article class="defcard" id="def-earned_premium">
+        <div class="nm">earned_premium</div>
+        <p>Each contract's annual premium spread evenly across the days it is in force, summed by the month the cover was provided. A policy sold in December contributes one month of earned premium.</p>
+<pre>metric: earned_premium
+type: simple
+measure: sum(premium_earned_eur)
+source: fct_premium_earned
+grain: month × product × risk_zone</pre>
+      </article>
+      <article class="defcard" id="def-claims_paid">
+        <div class="nm">claims_paid</div>
+        <p>Settlement amounts in euros, dated by settlement date. Amounts arrive in mixed formats (1250.50€, €1250.50, 1250.50 EUR, $1375.55) and are standardised in staging before they reach this metric. Open reserves are excluded.</p>
+<pre>metric: claims_paid
+type: simple
+measure: sum(settlement_amount_eur)
+source: fct_claims
+filter: claim_status = 'settled'</pre>
+      </article>
+      <article class="defcard" id="def-loss_ratio">
+        <div class="nm">loss_ratio</div>
+        <p>Claims paid divided by earned premium, calculated as a ratio of sums for whatever slice you select. Averaging monthly or per-segment ratios would give a different, wrong answer, so the layer never does.</p>
+<pre>metric: loss_ratio
+type: ratio
+numerator: claims_paid
+denominator: earned_premium
+target: 0.70</pre>
+      </article>
+      <article class="defcard" id="def-claim_count">
+        <div class="nm">claim_count</div>
+        <p>Distinct claims settled in the period. Duplicate claim IDs from the source extract are removed in staging and counted by a test, so the dashboard shows how many were dropped.</p>
+<pre>metric: claim_count
+type: simple
+measure: count_distinct(claim_id)
+source: fct_claims
+filter: claim_status = 'settled'</pre>
+      </article>
+    </div>
+    <details id="tbl-details">
+      <summary>Show the data behind the chart</summary>
+      <div class="tbl-wrap"><table id="tbl"><thead><tr><th>Month</th><th>Earned premium</th><th>Claims paid</th><th>Loss ratio</th><th>Claims settled</th></tr></thead><tbody></tbody></table></div>
+    </details>
+  </section>
+
+  <footer>Prototype for a personal project. All figures are generated in the page from a fixed seed and stand in for the governed metrics export. The forecast is a seasonal trend model fitted to the last 24 months of whatever slice is selected; italic rows in the table are forecasts.</footer>
+</div>
+
+<script>
+(() => {
+  // ---------- synthetic data (seeded) ----------
+  let s = 20260115;
+  const rnd = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const nrm = () => (rnd() + rnd() + rnd() + rnd() - 2) / 0.577;
+
+  const N = 48, H = 12, TARGET = 0.70;
+  const MONTHS = Array.from({ length: N + H }, (_, i) => new Date(2022, i, 1));
+  const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const mlabel = i => MON[MONTHS[i].getMonth()] + " " + MONTHS[i].getFullYear();
+
+  const PRODUCTS = [
+    { id: "auto", name: "Auto", prem: 1.70e6, lr: 0.66, sev: 2400, noise: 0.05 },
+    { id: "home", name: "Home", prem: 0.60e6, lr: 0.56, sev: 3800, noise: 0.06 },
+    { id: "health", name: "Health", prem: 0.45e6, lr: 0.76, sev: 650, noise: 0.04 },
+    { id: "life", name: "Life", prem: 0.25e6, lr: 0.44, sev: 18000, noise: 0.12 },
+  ];
+  const ZONES = [
+    { id: "high", name: "High", share: 0.25, adj: 0.10 },
+    { id: "medium", name: "Medium", share: 0.40, adj: 0.0 },
+    { id: "low", name: "Low", share: 0.35, adj: -0.07 },
+  ];
+  const STORM = 22; // Nov 2023
+  const rows = [];
+  for (let t = 0; t < N; t++) {
+    const m = t % 12, g = Math.pow(1.0055, t);
+    for (const p of PRODUCTS) for (const z of ZONES) {
+      const prem = p.prem * z.share * g * (1 + 0.025 * nrm());
+      let seas = 0;
+      if (p.id === "auto") { if (m === 0 || m === 1 || m === 11) seas += 0.07; if (m === 6 || m === 7) seas += 0.03; if (t >= 30) seas += (t - 30) * 0.004; }
+      if (p.id === "home") { if (m === 9 || m === 10) seas += 0.10; if (m === 0) seas += 0.05; if (t === STORM) seas += z.id === "high" ? 0.95 : z.id === "medium" ? 0.40 : 0.15; }
+      if (p.id === "health" && m <= 2) seas += 0.04;
+      const lr = Math.max(0.05, p.lr + z.adj + seas + p.noise * nrm());
+      const claims = prem * lr;
+      rows.push({ t, p: p.id, z: z.id, prem, claims, count: claims / (p.sev * (1 + 0.05 * nrm())) });
+    }
+  }
+
+  // ---------- state ----------
+  const st = { product: "all", zone: "all", view: "monthly", fc: true, play: N + H - 1, playing: false, hover: null };
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const agg = (prod, zone) => {
+    const prem = new Array(N).fill(0), claims = new Array(N).fill(0), count = new Array(N).fill(0);
+    for (const r of rows) {
+      if ((prod === "all" || r.p === prod) && (zone === "all" || r.z === zone)) { prem[r.t] += r.prem; claims[r.t] += r.claims; count[r.t] += r.count; }
+    }
+    return { prem, claims, count };
+  };
+
+  // seasonal index + linear trend on last 24 months, 80% interval
+  const forecast = v => {
+    const idx = new Array(12).fill(0), cnt = new Array(12).fill(0);
+    for (let y = 0; y < N / 12; y++) {
+      const sl = v.slice(y * 12, y * 12 + 12), mean = sl.reduce((a, b) => a + b, 0) / 12;
+      sl.forEach((x, m) => { idx[m] += x / mean; cnt[m]++; });
+    }
+    const si = idx.map((x, m) => x / cnt[m]);
+    const xs = [], ys = [];
+    for (let t = N - 24; t < N; t++) { xs.push(t); ys.push(v[t] / si[t % 12]); }
+    const mx = xs.reduce((a, b) => a + b) / xs.length, my = ys.reduce((a, b) => a + b) / ys.length;
+    let num = 0, den = 0; xs.forEach((x, i) => { num += (x - mx) * (ys[i] - my); den += (x - mx) ** 2; });
+    const b = num / den, a = my - b * mx;
+    let ss = 0; xs.forEach((x, i) => { ss += (v[x] - (a + b * x) * si[x % 12]) ** 2; });
+    const sd = Math.sqrt(ss / (xs.length - 2));
+    const mean = [], lo = [], hi = [];
+    for (let h = 1; h <= H; h++) {
+      const t = N - 1 + h, f = (a + b * t) * si[t % 12], w = 1.2816 * sd * Math.sqrt(1 + h / 12);
+      mean.push(f); lo.push(Math.max(0, f - w)); hi.push(f + w);
+    }
+    return { mean, lo, hi };
+  };
+
+  const cum = a => { let s = 0; return a.map(x => (s += x)); };
+
+  let D; // derived data for the current filter
+  const derive = () => {
+    const a = agg(st.product, st.zone);
+    const fp = forecast(a.prem), fcl = forecast(a.claims), fct = forecast(a.count);
+    const prem = a.prem.concat(fp.mean), claims = a.claims.concat(fcl.mean), count = a.count.concat(fct.mean);
+    let pLo = new Array(N).fill(null).concat(fp.lo), pHi = new Array(N).fill(null).concat(fp.hi);
+    let cLo = new Array(N).fill(null).concat(fcl.lo), cHi = new Array(N).fill(null).concat(fcl.hi);
+    let showP = prem, showC = claims;
+    if (st.view === "cumulative") {
+      showP = cum(prem); showC = cum(claims);
+      const baseP = showP[N - 1], baseC = showC[N - 1];
+      const cl = (arr, base) => { let s = base; return arr.map((x, i) => i < N ? null : (s += x)); };
+      pLo = cl(pLo, baseP); pHi = cl(pHi, baseP); cLo = cl(cLo, baseC); cHi = cl(cHi, baseC);
+    }
+    D = { prem, claims, count, showP, showC, pLo, pHi, cLo, cHi, lr: prem.map((p, i) => claims[i] / p) };
+  };
+
+  // ---------- formatting ----------
+  const eur = v => v >= 1e9 ? "€" + (v / 1e9).toFixed(2) + "B" : v >= 1e6 ? "€" + (v / 1e6).toFixed(v >= 1e8 ? 0 : 1) + "M" : v >= 1e3 ? "€" + Math.round(v / 1e3) + "k" : "€" + Math.round(v);
+  const pct = v => (v * 100).toFixed(1) + "%";
+  const int = v => Math.round(v).toLocaleString("en-US");
+  const status = lr => lr <= 0.65 ? ["good", "On target"] : lr <= 0.75 ? ["watch", "Watch"] : ["high", "Above target"];
+  const total = () => st.fc ? N + H : N;
+
+  // ---------- chart drawing ----------
+  const $ = id => document.getElementById(id);
+  const svgMain = $("main"), svgLr = $("lr"), tip = $("tip");
+  let geo = {};
+
+  const niceMax = v => { const p = Math.pow(10, Math.floor(Math.log10(v))); const n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; };
+
+  const pathTo = (vals, x, y, from, upto) => {
+    let d = "";
+    const end = Math.min(upto, vals.length - 1), fl = Math.floor(end);
+    for (let i = from; i <= fl; i++) { if (vals[i] == null) continue; d += (d ? "L" : "M") + x(i).toFixed(1) + "," + y(vals[i]).toFixed(1); }
+    if (end > fl && fl + 1 < vals.length && vals[fl + 1] != null && fl >= from) {
+      const f = end - fl, v = vals[fl] + (vals[fl + 1] - vals[fl]) * f;
+      d += "L" + x(fl + f).toFixed(1) + "," + y(v).toFixed(1);
+    }
+    return d;
+  };
+  const valAt = (vals, p) => { const fl = Math.floor(p), f = p - fl; return fl + 1 < vals.length && f > 0 ? vals[fl] + (vals[fl + 1] - vals[fl]) * f : vals[fl]; };
+
+  const draw = () => {
+    const W = $("main-plot").clientWidth, narrow = W < 560;
+    const M = { t: 16, r: narrow ? 58 : 84, b: 26, l: narrow ? 46 : 56 }, Hh = narrow ? 260 : 330;
+    const T = total(), p = Math.min(st.play, T - 1);
+    const x = i => M.l + (W - M.l - M.r) * (i / (T - 1));
+    let ymax = 0;
+    for (let i = 0; i < T; i++) ymax = Math.max(ymax, D.showP[i], D.showC[i], D.pHi[i] || 0, D.cHi[i] || 0);
+    ymax = niceMax(ymax * 1.04);
+    const y = v => M.t + (Hh - M.t - M.b) * (1 - v / ymax);
+    geo = { x, M, W, T };
+
+    let g = "";
+    // grid + y axis
+    for (let k = 0; k <= 4; k++) {
+      const v = ymax * k / 4, yy = y(v).toFixed(1);
+      g += `<line x1="${M.l}" x2="${W - M.r}" y1="${yy}" y2="${yy}" stroke="var(--grid)" stroke-width="1"/>`;
+      g += `<text x="${M.l - 8}" y="${yy}" dy="4" text-anchor="end" font-size="11" fill="var(--ink-3)" class="num">${eur(v)}</text>`;
+    }
+    for (let i = 0; i < T; i += 12) {
+      const xx = x(i).toFixed(1);
+      g += `<line x1="${xx}" x2="${xx}" y1="${Hh - M.b}" y2="${Hh - M.b + 5}" stroke="var(--ink-3)"/>`;
+      g += `<text x="${xx}" y="${Hh - 6}" font-size="11" fill="var(--ink-3)" text-anchor="start" dx="3">${MONTHS[i].getFullYear()}</text>`;
+    }
+    // forecast region shading + divider
+    if (st.fc) {
+      const xa = x(N - 1);
+      g += `<rect x="${xa}" y="${M.t}" width="${W - M.r - xa}" height="${Hh - M.t - M.b}" fill="var(--surface)"/>`;
+      g += `<line x1="${xa}" x2="${xa}" y1="${M.t}" y2="${Hh - M.b}" stroke="var(--ink-3)" stroke-dasharray="2 3"/>`;
+      g += `<text x="${xa + 6}" y="${M.t + 12}" font-size="11" fill="var(--ink-3)">Forecast</text>`;
+      for (let k = 0; k <= 4; k++) { const yy = y(ymax * k / 4).toFixed(1); g += `<line x1="${xa}" x2="${W - M.r}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/>`; }
+    }
+    g += `<line x1="${M.l}" x2="${W - M.r}" y1="${Hh - M.b}" y2="${Hh - M.b}" stroke="var(--ink-3)" stroke-width="1"/>`;
+
+    // margin band between premium and claims (actuals only)
+    const pa = Math.min(p, N - 1);
+    if (pa > 0) {
+      let top = "", bot = "";
+      const fl = Math.floor(pa);
+      for (let i = 0; i <= fl; i++) top += (i ? "L" : "M") + x(i).toFixed(1) + "," + y(D.showP[i]).toFixed(1);
+      if (pa > fl) top += "L" + x(pa).toFixed(1) + "," + y(valAt(D.showP, pa)).toFixed(1);
+      const pts = [];
+      for (let i = 0; i <= fl; i++) pts.push(x(i).toFixed(1) + "," + y(D.showC[i]).toFixed(1));
+      if (pa > fl) pts.push(x(pa).toFixed(1) + "," + y(valAt(D.showC, pa)).toFixed(1));
+      bot = "L" + pts.reverse().join("L");
+      g += `<path d="${top}${bot}Z" fill="var(--gap)"/>`;
+    }
+    // forecast bands
+    if (st.fc && p > N - 1) {
+      const band = (lo, hi, base) => {
+        const fl = Math.floor(p); let up = `M${x(N - 1).toFixed(1)},${y(base).toFixed(1)}`, dn = [];
+        for (let i = N; i <= fl; i++) { up += `L${x(i).toFixed(1)},${y(hi[i]).toFixed(1)}`; dn.push(`${x(i).toFixed(1)},${y(lo[i]).toFixed(1)}`); }
+        if (p > fl && fl + 1 < T) { up += `L${x(p).toFixed(1)},${y(valAt(hi, p)).toFixed(1)}`; dn.push(`${x(p).toFixed(1)},${y(valAt(lo, p)).toFixed(1)}`); }
+        return `<path d="${up}L${dn.reverse().join("L")}L${x(N - 1).toFixed(1)},${y(base).toFixed(1)}Z" fill="var(--band)" opacity=".8"/>`;
+      };
+      g += band(D.pLo, D.pHi, D.showP[N - 1]);
+      g += band(D.cLo, D.cHi, D.showC[N - 1]).replace("var(--band)", "var(--claims)").replace('opacity=".8"', 'opacity=".12"');
+    }
+    // lines
+    const line = (vals, col) => {
+      let o = `<path d="${pathTo(vals, x, y, 0, Math.min(p, N - 1))}" fill="none" stroke="${col}" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>`;
+      if (st.fc && p > N - 1) o += `<path d="${pathTo(vals, x, y, N - 1, p)}" fill="none" stroke="${col}" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"/>`;
+      return o;
+    };
+    g += line(D.showP, "var(--premium)") + line(D.showC, "var(--claims)");
+
+    // storm annotation
+    const stormOn = (st.product === "all" || st.product === "home") && (st.zone !== "low") && st.view === "monthly" && p >= STORM;
+    if (stormOn) {
+      const sx = x(STORM), sy = y(D.showC[STORM]);
+      const right = sx < W * 0.6;
+      g += `<circle cx="${sx}" cy="${sy}" r="5" fill="none" stroke="var(--ink-2)" stroke-width="1.5"/>`;
+      g += `<line x1="${sx}" y1="${sy - 7}" x2="${sx}" y2="${M.t + 20}" stroke="var(--ink-3)" stroke-width="1"/>`;
+      g += `<text x="${sx + (right ? 6 : -6)}" y="${M.t + 24}" font-size="11.5" fill="var(--ink-2)" text-anchor="${right ? "start" : "end"}">${narrow ? "Nov 2023 storm" : "Nov 2023 storm claims"}</text>`;
+    }
+
+    // heads with values
+    const hp = valAt(D.showP, p), hc = valAt(D.showC, p);
+    let yp = y(hp), yc = y(hc);
+    let lp = yp, lc = yc;
+    if (Math.abs(lp - lc) < 16) { const mid = (lp + lc) / 2; if (lp <= lc) { lp = mid - 8; lc = mid + 8; } else { lp = mid + 8; lc = mid - 8; } }
+    const hx = x(p);
+    g += `<circle cx="${hx}" cy="${yp}" r="4.5" fill="var(--premium)" stroke="var(--bg)" stroke-width="2"/>`;
+    g += `<circle cx="${hx}" cy="${yc}" r="4.5" fill="var(--claims)" stroke="var(--bg)" stroke-width="2"/>`;
+    g += `<text x="${hx + 9}" y="${lp}" dy="4" font-size="12" font-weight="600" fill="var(--ink)" class="num">${eur(hp)}</text>`;
+    g += `<text x="${hx + 9}" y="${lc}" dy="4" font-size="12" font-weight="600" fill="var(--ink)" class="num">${eur(hc)}</text>`;
+
+    // hover crosshair
+    if (st.hover != null && st.hover <= p) {
+      const xx = x(st.hover);
+      g += `<line x1="${xx}" x2="${xx}" y1="${M.t}" y2="${Hh - M.b}" stroke="var(--ink-2)" stroke-width="1"/>`;
+      g += `<circle cx="${xx}" cy="${y(D.showP[st.hover])}" r="4" fill="var(--premium)" stroke="var(--bg)" stroke-width="2"/>`;
+      g += `<circle cx="${xx}" cy="${y(D.showC[st.hover])}" r="4" fill="var(--claims)" stroke="var(--bg)" stroke-width="2"/>`;
+    }
+    svgMain.setAttribute("viewBox", `0 0 ${W} ${Hh}`);
+    svgMain.setAttribute("height", Hh);
+    svgMain.innerHTML = g;
+
+    // ---- loss ratio strip ----
+    const Hl = narrow ? 110 : 130, Ml = { t: 10, b: 20 };
+    let lmax = 0; for (let i = 0; i < T; i++) lmax = Math.max(lmax, D.lr[i]);
+    lmax = Math.max(1.0, Math.ceil(lmax * 10 + 0.5) / 10);
+    const yl = v => Ml.t + (Hl - Ml.t - Ml.b) * (1 - v / lmax);
+    let h = "";
+    [0, 0.5, 1.0].filter(v => v <= lmax).forEach(v => {
+      h += `<line x1="${M.l}" x2="${W - M.r}" y1="${yl(v)}" y2="${yl(v)}" stroke="var(--grid)"/>`;
+      h += `<text x="${M.l - 8}" y="${yl(v)}" dy="4" text-anchor="end" font-size="11" fill="var(--ink-3)">${v * 100}%</text>`;
+    });
+    if (st.fc) h += `<rect x="${x(N - 1)}" y="${Ml.t}" width="${W - M.r - x(N - 1)}" height="${Hl - Ml.t - Ml.b}" fill="var(--surface)"/>`;
+    // above-target shading
+    h += `<rect x="${M.l}" y="${Ml.t}" width="${W - M.r - M.l}" height="${yl(TARGET) - Ml.t}" fill="var(--high-bg)" opacity=".55"/>`;
+    h += `<line x1="${M.l}" x2="${W - M.r}" y1="${yl(TARGET)}" y2="${yl(TARGET)}" stroke="var(--ink-2)" stroke-dasharray="4 4"/>`;
+    h += `<text x="${W - M.r + 6}" y="${yl(TARGET)}" dy="4" font-size="11" fill="var(--ink-2)">70%</text>`;
+    h += `<path d="${pathTo(D.lr, x, yl, 0, Math.min(p, N - 1))}" fill="none" stroke="var(--ink)" stroke-width="1.75" stroke-linejoin="round"/>`;
+    if (st.fc && p > N - 1) h += `<path d="${pathTo(D.lr, x, yl, N - 1, p)}" fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+    // breach markers
+    for (let i = 0; i <= Math.min(Math.floor(p), N - 1); i++) if (D.lr[i] > 0.75) h += `<circle cx="${x(i)}" cy="${yl(D.lr[i])}" r="3" fill="var(--high)"/>`;
+    const hl = valAt(D.lr, p);
+    h += `<circle cx="${hx}" cy="${yl(hl)}" r="4" fill="var(--ink)" stroke="var(--bg)" stroke-width="2"/>`;
+    if (Math.abs(yl(hl) - yl(TARGET)) > 12) h += `<text x="${hx + 8}" y="${yl(hl)}" dy="4" font-size="12" font-weight="600" fill="var(--ink)" class="num">${pct(hl)}</text>`;
+    if (st.hover != null && st.hover <= p) h += `<line x1="${x(st.hover)}" x2="${x(st.hover)}" y1="${Ml.t}" y2="${Hl - Ml.b}" stroke="var(--ink-2)"/>`;
+    h += `<line x1="${M.l}" x2="${W - M.r}" y1="${Hl - Ml.b}" y2="${Hl - Ml.b}" stroke="var(--ink-3)"/>`;
+    svgLr.setAttribute("viewBox", `0 0 ${W} ${Hl}`);
+    svgLr.setAttribute("height", Hl);
+    svgLr.innerHTML = h;
+
+    $("when").textContent = mlabel(Math.round(p));
+    const sc = $("scrub"); sc.max = T - 1; if (document.activeElement !== sc) sc.value = Math.round(p);
+  };
+
+  // ---------- KPIs + breakdowns ----------
+  const t12 = (arr, end) => { let s = 0; for (let i = Math.max(0, end - 11); i <= end; i++) s += arr[i]; return s; };
+  const setKpi = (id, val, sub, fc) => { const k = $(id); k.querySelector(".val").textContent = val; k.querySelector(".sub").innerHTML = sub; k.classList.toggle("fc", fc); };
+  const delta = (now, prev, invert) => {
+    if (!prev) return "No prior year";
+    const d = now / prev - 1, sign = d >= 0 ? "+" : "−";
+    return `${sign}${Math.abs(d * 100).toFixed(1)}% vs prior 12 months`;
+  };
+  const kpis = () => {
+    const e = Math.round(Math.min(st.play, total() - 1)), fc = e >= N;
+    const P = t12(D.prem, e), C = t12(D.claims, e), K = t12(D.count, e);
+    const Pp = e >= 23 ? t12(D.prem, e - 12) : 0, Cp = e >= 23 ? t12(D.claims, e - 12) : 0, Kp = e >= 23 ? t12(D.count, e - 12) : 0;
+    setKpi("k-prem", eur(P), delta(P, Pp), fc);
+    setKpi("k-claims", eur(C), delta(C, Cp), fc);
+    const lr = C / P, [cls, txt] = status(lr);
+    const prevLr = Pp ? Cp / Pp : null;
+    setKpi("k-lr", pct(lr), `<span class="pill ${cls}">${txt}</span>${prevLr ? ` <span class="num">${((lr - prevLr) * 100 >= 0 ? "+" : "−") + Math.abs((lr - prevLr) * 100).toFixed(1)} pts</span>` : ""}`, fc);
+    setKpi("k-count", int(K), `Avg €${int(C / K)} per claim`, fc);
+    $("period").innerHTML = `Trailing 12 months to <strong class="num">${mlabel(e)}</strong>${fc ? ' <span class="pill fcst">Includes forecast months</span>' : ""}`;
+    document.querySelector(".kpis").setAttribute("aria-label", `Trailing 12 months to ${mlabel(e)}${fc ? " (forecast)" : ""}`);
+  };
+
+  const barCache = {};
+  const breakdown = (dim) => {
+    const e = Math.round(Math.min(st.play, total() - 1));
+    const list = dim === "zone" ? ZONES : PRODUCTS;
+    const host = $(dim === "zone" ? "b-zone" : "b-product");
+    if (!barCache[dim]) {
+      host.innerHTML = list.map(it => `<button class="bar-row" data-id="${it.id}" aria-pressed="false"><span class="nm">${it.name}</span><span class="track"><span class="fill"></span><span class="tgt" style="left:${TARGET / 1.2 * 100}%"></span></span><span class="v"><span class="pill"></span><span class="num lrv"></span></span></button>`).join("");
+      host.querySelectorAll(".bar-row").forEach(b => b.addEventListener("click", () => {
+        const id = b.dataset.id; st[dim] = st[dim] === id ? "all" : id; refresh();
+      }));
+      barCache[dim] = true;
+    }
+    // each panel holds the other filter fixed and shows every value of its own dimension
+    const series = {};
+    for (const it of list) {
+      const a = dim === "zone" ? agg(st.product, it.id) : agg(it.id, st.zone);
+      let P, C;
+      if (e < N) { P = t12(a.prem, e); C = t12(a.claims, e); }
+      else { const fp = forecast(a.prem), fc = forecast(a.claims); const pp = a.prem.concat(fp.mean), cc = a.claims.concat(fc.mean); P = t12(pp, e); C = t12(cc, e); }
+      series[it.id] = C / P;
+    }
+    host.querySelectorAll(".bar-row").forEach(b => {
+      const v = series[b.dataset.id], [cls, txt] = status(v);
+      b.setAttribute("aria-pressed", String(st[dim] === b.dataset.id));
+      b.querySelector(".fill").style.width = Math.min(100, v / 1.2 * 100) + "%";
+      const pl = b.querySelector(".pill"); pl.className = "pill " + cls; pl.textContent = txt;
+      b.querySelector(".lrv").textContent = pct(v);
+      b.setAttribute("aria-label", `${b.querySelector(".nm").textContent}: loss ratio ${pct(v)}, ${txt}. ${st[dim] === b.dataset.id ? "Selected, press to clear filter" : "Press to filter"}`);
+    });
+  };
+
+  const table = () => {
+    const T = total();
+    let html = "";
+    for (let i = T - 1; i >= 0; i--) html += `<tr class="${i >= N ? "f" : ""}"><td>${mlabel(i)}${i >= N ? " (f)" : ""}</td><td class="num">${eur(D.prem[i])}</td><td class="num">${eur(D.claims[i])}</td><td class="num">${pct(D.lr[i])}</td><td class="num">${int(D.count[i])}</td></tr>`;
+    $("tbl").querySelector("tbody").innerHTML = html;
+  };
+
+  // ---------- controls ----------
+  const seg = (id, key, opts) => {
+    const host = $(id);
+    host.innerHTML = opts.map(([v, l]) => `<button data-v="${v}" aria-pressed="${st[key] === v}">${l}</button>`).join("");
+    host.addEventListener("click", ev => { const b = ev.target.closest("button"); if (!b) return; st[key] = b.dataset.v; refresh(); });
+  };
+  const syncSegs = () => {
+    [["f-product", "product"], ["f-zone", "zone"], ["f-view", "view"]].forEach(([id, key]) =>
+      $(id).querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === st[key]))));
+  };
+  seg("f-product", "product", [["all", "All"], ...PRODUCTS.map(p => [p.id, p.name])]);
+  seg("f-zone", "zone", [["all", "All"], ...ZONES.map(z => [z.id, z.name])]);
+  seg("f-view", "view", [["monthly", "Monthly"], ["cumulative", "Cumulative"]]);
+  $("f-fc").addEventListener("change", e => { st.fc = e.target.checked; if (!st.playing) st.play = total() - 1; else st.play = Math.min(st.play, total() - 1); $("lg-fc").hidden = !st.fc; refresh(); });
+
+  const ICON_PLAY = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5v11l9.5-5.5z"/></svg>';
+  const ICON_PAUSE = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5h3v11H3zM8 1.5h3v11H8z"/></svg>';
+  const ICON_REPLAY = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2a5 5 0 1 1-4.9 6h1.6A3.5 3.5 0 1 0 7 3.5V6L3.5 2.75 7 0z"/></svg>';
+  const setIcon = () => {
+    const atEnd = st.play >= total() - 1;
+    $("play").innerHTML = st.playing ? ICON_PAUSE : atEnd ? ICON_REPLAY : ICON_PLAY;
+    $("play").setAttribute("aria-label", st.playing ? "Pause" : atEnd ? "Replay from January 2022" : "Play");
+  };
+  let raf = null, last = 0;
+  const MS_PER_MONTH = 110;
+  const tick = now => {
+    if (!st.playing) return;
+    const dt = last ? now - last : 16; last = now;
+    st.play = Math.min(total() - 1, st.play + dt / MS_PER_MONTH);
+    if (st.play >= total() - 1) { st.playing = false; }
+    frame();
+    if (st.playing) raf = requestAnimationFrame(tick); else setIcon();
+  };
+  const start = (fromZero) => {
+    if (fromZero || st.play >= total() - 1) st.play = 0;
+    st.playing = true; last = 0; st.hover = null; tip.hidden = true; setIcon();
+    cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+  };
+  const stop = () => { st.playing = false; cancelAnimationFrame(raf); setIcon(); };
+  $("play").addEventListener("click", () => st.playing ? stop() : start(false));
+  $("scrub").addEventListener("input", e => { stop(); st.play = +e.target.value; frame(); setIcon(); });
+
+  // hover
+  const hover = (ev, host) => {
+    if (st.playing) return;
+    const r = host.getBoundingClientRect(), mx = ev.clientX - r.left;
+    const { M, W, T } = geo;
+    if (mx < M.l - 4 || mx > W - M.r + 4) { st.hover = null; tip.hidden = true; draw(); return; }
+    const i = Math.max(0, Math.min(T - 1, Math.round((mx - M.l) / (W - M.l - M.r) * (T - 1))));
+    if (i > st.play) { st.hover = null; tip.hidden = true; draw(); return; }
+    st.hover = i; draw();
+    const fc = i >= N, cumv = st.view === "cumulative";
+    tip.innerHTML = `<b>${mlabel(i)}${fc ? " · forecast" : ""}</b>
+      <div class="r"><span class="k"><i style="background:var(--premium)"></i>Earned premium${cumv ? " to date" : ""}</span><em>${eur(D.showP[i])}</em></div>
+      <div class="r"><span class="k"><i style="background:var(--claims)"></i>Claims paid${cumv ? " to date" : ""}</span><em>${eur(D.showC[i])}</em></div>
+      <div class="r"><span>Margin</span><em>${eur(D.showP[i] - D.showC[i])}</em></div>
+      <div class="r"><span>Loss ratio (month)</span><em>${pct(D.lr[i])}</em></div>
+      ${fc ? `<div class="r"><span>Claims 80% range</span><em>${eur(st.view === "cumulative" ? D.cLo[i] : D.cLo[i])}–${eur(D.cHi[i])}</em></div>` : ""}`;
+    tip.hidden = false;
+    const tw = tip.offsetWidth, px = geo.x(i);
+    tip.style.left = (px + 14 + tw > r.width ? px - 14 - tw : px + 14) + "px";
+    tip.style.top = (host.id === "lr-plot" ? -40 : 24) + "px";
+  };
+  ["main-plot", "lr-plot"].forEach(id => {
+    const host = $(id);
+    host.addEventListener("pointermove", ev => hover(ev, host));
+    host.addEventListener("pointerleave", () => { st.hover = null; tip.hidden = true; draw(); });
+  });
+  // the tooltip lives in the main plot; position it relative to that box for both charts
+  $("lr-plot").addEventListener("pointermove", () => { tip.style.top = ($("main-plot").offsetHeight - 40) + "px"; });
+
+  // definition links
+  document.querySelectorAll(".def").forEach(b => b.addEventListener("click", () => {
+    const card = $("def-" + b.dataset.def);
+    card.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+    card.classList.add("flash"); setTimeout(() => card.classList.remove("flash"), 1600);
+  }));
+
+  // ---------- render loop ----------
+  let lastKpiMonth = -1;
+  const frame = () => {
+    draw();
+    const m = Math.round(st.play);
+    if (m !== lastKpiMonth) { lastKpiMonth = m; kpis(); breakdown("zone"); breakdown("product"); }
+  };
+  const refresh = () => {
+    syncSegs(); derive(); lastKpiMonth = -1;
+    if (!st.playing) st.play = Math.min(st.play, total() - 1);
+    frame(); table(); setIcon();
+  };
+
+  derive(); refresh();
+  new ResizeObserver(() => draw()).observe($("main-plot"));
+  // one orchestrated draw-in after the complete chart has rendered
+  if (!reduce) setTimeout(() => start(true), 700);
+})();
+</script>
+</body>
+</html>

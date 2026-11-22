@@ -15,7 +15,6 @@ Public site, version-controlled in Git and deployed with
 │   ├── content.config.ts    ← frontmatter schemas for posts and dashboards
 │   ├── layouts/Base.astro   ← shared page shell (nav, footer)
 │   ├── pages/               ← routes: /, /blog/, /blog/<slug>/, /dashboards/, /rss.xml
-│   │   └── dashboards/*.astro ← D3 dashboards as site pages (D3 bundled from npm)
 │   └── styles/global.css
 ├── public/
 │   ├── dashboards/<slug>/index.html   ← self-contained HTML dashboards, copied as-is
@@ -33,7 +32,6 @@ Public site, version-controlled in Git and deployed with
 | Publish a post | set `draft: false` in its frontmatter, commit and push to `main` |
 | New project page | `npm run new-project -- "Project name"` then edit `src/content/projects/<slug>.md`; set `featured: true` to show it on the home page |
 | Add a dashboard | put `index.html` in `public/dashboards/<slug>/`, add `src/content/dashboards/<slug>.md` |
-| Add a D3 dashboard | copy `src/pages/dashboards/claims-trend.astro`, put data in `public/data/`, add a card in `src/content/dashboards/` with `path: "dashboards/<name>/"` |
 | Production build check | `npm run build` (drafts are excluded) |
 
 ### Blog post frontmatter
@@ -71,6 +69,5 @@ This repo is public. Resume, job-search notes and anything personal live in a se
 
 - Build URLs from `import.meta.env.BASE_URL` with the trailing slash stripped, e.g.
   `` `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data/file.csv` ``, so links keep working if a base path is ever added.
-- Parse CSV rows explicitly (as in `claims-trend.astro`) rather than with `d3.autoType`, which turns
-  `YYYY-MM` strings into dates on its own.
-- D3 transitions are dropped by the bundler with `import * as d3`; add `import 'd3-transition'` if you need them.
+- A dashboard in `public/dashboards/<slug>/index.html` is served as-is, so it needs its own `<!doctype html>`,
+  head and styles. Link back to the list with `href="../"`.
