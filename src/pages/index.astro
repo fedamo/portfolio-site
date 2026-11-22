@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import HeroSketch from '../components/HeroSketch.astro';
 import EntryRow from '../components/EntryRow.astro';
-import { getPosts, getDashboards, getProjects, base, fmt, readingTime, links } from '../lib';
+import { getPosts, getDashboards, getProjects, base, fmt, readingTime, links, statusLabel } from '../lib';
 const posts = (await getPosts()).slice(0, 4);
 const projects = (await getProjects()).filter((p) => p.data.featured);
 const dashboards = await getDashboards();
@@ -30,14 +30,22 @@ const dashboards = await getDashboards();
   </section>
 
   <section class="list-section">
-    <h2 class="label">Projects &amp; dashboards</h2>
+    <h2 class="label">Projects</h2>
     {projects.map((p) => (
       <EntryRow level="item" href={`${base}/projects/${p.id}/`} title={p.data.title} summary={p.data.summary}
-        skills={p.data.skills} sketch={p.data.sketch} draft={p.data.draft} />
+        meta={statusLabel[p.data.status]} skills={p.data.skills} sketch={p.data.sketch} draft={p.data.draft} />
     ))}
+    <p class="more"><a href={`${base}/projects/`}>All projects →</a></p>
+  </section>
+
+  {dashboards.length > 0 && (
+  <section class="list-section">
+    <h2 class="label">Dashboards</h2>
     {dashboards.map((d) => (
       <EntryRow level="item" href={`${base}/${d.data.path}`} title={d.data.title} summary={d.data.description}
-        skills={d.data.skills} sketch={d.data.sketch} draft={d.data.draft} />
+        meta={d.data.syntheticData ? 'Interactive · placeholder data' : 'Interactive'} skills={d.data.skills} sketch={d.data.sketch} draft={d.data.draft} />
     ))}
+    <p class="more"><a href={`${base}/dashboards/`}>All dashboards →</a></p>
   </section>
+  )}
 </Base>
