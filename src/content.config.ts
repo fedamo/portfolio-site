@@ -29,7 +29,7 @@ const dashboards = defineCollection({
     title: z.string(),
     description: z.string(),
     pubDate: z.coerce.date(),
-    path: z.string(), // e.g. "dashboards/sample-metrics/index.html" (relative to the site base)
+    path: z.string(), // e.g. "dashboards/portfolio-pulse/index.html" (relative to the site base)
     tools: z.array(z.string()).default([]),
     syntheticData: z.boolean().default(true),
     sketch,
