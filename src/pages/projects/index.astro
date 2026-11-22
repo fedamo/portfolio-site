@@ -11,7 +11,7 @@ const items = await getProjects();
   </header>
   <section class="list-section">
     {items.length === 0 ? <p class="muted">Projects coming soon.</p> : items.map((p) => (
-      <EntryRow level="item" href={`${base}/projects/${p.id}/`} title={p.data.title} summary={p.data.summary}
+      <EntryRow heading="h2" level="item" href={`${base}/projects/${p.id}/`} title={p.data.title} summary={p.data.summary}
         meta={statusLabel[p.data.status]} skills={p.data.skills} sketch={p.data.sketch} draft={p.data.draft} />
     ))}
   </section>

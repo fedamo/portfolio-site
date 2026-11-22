@@ -1,6 +1,7 @@
 ---
 import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import Sketch from '../../components/Sketch.astro';
 import { getProjects, base, statusLabel } from '../../lib';
 
 export async function getStaticPaths() {
@@ -14,16 +15,20 @@ const d = project.data;
 <Base title={`${d.title} · Defined Once`} description={d.summary}>
   <article>
     <p class="back"><a href={`${base}/projects/`}>← All projects</a></p>
-    <header class="post-header">
-      <h1>{d.title} {d.draft && <span class="draft">draft</span>}</h1>
-      <p class="post-dek">{d.summary}</p>
-      <div class="post-meta">
-        <span class="status">{statusLabel[d.status]}</span>
-        {d.demoUrl && <><span class="sep">·</span><a href={d.demoUrl}>Live demo</a></>}
-        {d.repoUrl && <><span class="sep">·</span><a href={d.repoUrl}>Code</a></>}
-        {d.stack.length > 0 && <><span class="sep">·</span><span>{d.stack.join(', ')}</span></>}
+    <header class="post-header project-header">
+      <div class="project-title">
+        <div>
+          <h1>{d.title} {d.draft && <span class="draft">draft</span>}</h1>
+          <p class="post-dek">{d.summary}</p>
+        </div>
+        <Sketch name={d.sketch} />
       </div>
-      {d.skills.length > 0 && <p class="entry-skills">{d.skills.join(' · ')}</p>}
+      <dl class="project-facts">
+        <div><dt>Status</dt><dd>{statusLabel[d.status]}</dd></div>
+        {d.stack.length > 0 && <div><dt>Stack</dt><dd>{d.stack.join(', ')}</dd></div>}
+        {d.skills.length > 0 && <div><dt>Skills</dt><dd>{d.skills.join(' · ')}</dd></div>}
+        {(d.demoUrl || d.repoUrl) && <div><dt>Links</dt><dd class="fact-links">{d.demoUrl && <a href={d.demoUrl}>Live demo</a>}{d.repoUrl && <a href={d.repoUrl}>Code</a>}</dd></div>}
+      </dl>
     </header>
     <div class="prose">
       <Content />

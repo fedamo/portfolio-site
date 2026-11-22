@@ -47,6 +47,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <footer class="site-footer">
       <span>© {new Date().getFullYear()} Waylon Sittampalam</span>
       <a href={`${base}/about/`}>About</a>
+      {links.email && <a href={`mailto:${links.email}`}>Email</a>}
       {links.linkedin && <a href={links.linkedin} rel="me">LinkedIn</a>}
       <a href={`${base}/rss.xml`}>RSS</a>
       <a href="https://github.com/fedamo/portfolio-site">Source</a>

@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import HeroSketch from '../components/HeroSketch.astro';
 import EntryRow from '../components/EntryRow.astro';
-import { getPosts, getDashboards, getProjects, base, fmt, readingTime } from '../lib';
+import { getPosts, getDashboards, getProjects, base, fmt, readingTime, links } from '../lib';
 const posts = (await getPosts()).slice(0, 4);
 const projects = (await getProjects()).filter((p) => p.data.featured);
 const dashboards = await getDashboards();
@@ -12,11 +12,11 @@ const dashboards = await getDashboards();
     <h1>Define it once.<br />Trust it everywhere.</h1>
     <p class="hero-sub">Notes on governed analytics, semantic layers and building with AI.</p>
     <p class="hero-lede">
-      I'm Waylon Sittampalam, an analytics engineer in Cary, NC. When "revenue" means five different things across five
+      I'm Waylon Sittampalam, an analytics engineer in Cary, NC. When “revenue” means five different things across five
       dashboards, nobody trusts the number. I define each metric once, as code in a semantic layer, so a dashboard, a
       notebook and an AI agent all return the same answer, and every answer can be checked.
     </p>
-    <p class="hero-links"><a href={`${base}/projects/`}>See the projects</a><a href={`${base}/about/`}>About me</a></p>
+    <p class="hero-links"><a href={`${base}/projects/`}>See the projects</a><a href={`${base}/about/`}>About me</a>{links.email && <a href={`mailto:${links.email}`}>Get in touch</a>}</p>
     <HeroSketch />
   </section>
 

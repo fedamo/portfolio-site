@@ -12,7 +12,7 @@ const posts = await getPosts();
   </header>
   <section class="list-section">
     {posts.map((p) => (
-      <EntryRow href={`${base}/blog/${p.id}/`} title={p.data.title} summary={p.data.description}
+      <EntryRow heading="h2" href={`${base}/blog/${p.id}/`} title={p.data.title} summary={p.data.description}
         meta={`${fmt(p.data.pubDate)} · ${readingTime(p.body)} min read`} sketch={p.data.sketch} draft={p.data.draft} />
     ))}
   </section>
