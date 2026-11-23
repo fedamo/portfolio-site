@@ -1,0 +1,152 @@
+# Sample insurance ontology for the Portfolio Pulse dashboard (definedonce.dev).
+# Synthetic example. The `ins:` terms describe the business; the `sv:` annotations
+# say where each term lives in the warehouse, so a script can derive the semantic view.
+
+@prefix ins:  <https://definedonce.dev/ontology/insurance#> .
+@prefix sv:   <https://definedonce.dev/ontology/semantic-view#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<https://definedonce.dev/ontology/insurance> a owl:Ontology ;
+    rdfs:label "Portfolio Pulse insurance ontology" ;
+    sv:viewName "portfolio_pulse" ;
+    sv:schema "analytics.gold" ;
+    rdfs:comment "Premium, claims and loss ratio by product, risk zone and month." .
+
+# ---------- Classes (business things) ----------
+
+ins:Policy a owl:Class ;
+    rdfs:label "Policy" ;
+    rdfs:comment "An insurance contract sold to a customer." ;
+    sv:table "dim_policy" ; sv:alias "policy" ; sv:primaryKey "policy_id" .
+
+ins:Product a owl:Class ;
+    rdfs:label "Product" ;
+    rdfs:comment "The line of business a policy belongs to: Auto, Home, Health or Life." ;
+    skos:altLabel "line of business", "LOB" ;
+    sv:table "dim_product" ; sv:alias "product" ; sv:primaryKey "product_id" .
+
+ins:RiskZone a owl:Class ;
+    rdfs:label "Risk zone" ;
+    rdfs:comment "Underwriting risk band for where a policy is located: High, Medium or Low." ;
+    skos:altLabel "risk band", "territory" ;
+    sv:table "dim_risk_zone" ; sv:alias "risk_zone" ; sv:primaryKey "risk_zone_id" .
+
+ins:CalendarMonth a owl:Class ;
+    rdfs:label "Calendar month" ;
+    rdfs:comment "A month on the reporting calendar." ;
+    sv:table "dim_month" ; sv:alias "month" ; sv:primaryKey "month_key" .
+
+ins:PremiumEarning a owl:Class ;
+    rdfs:label "Premium earning" ;
+    rdfs:comment "The part of a policy's premium earned in one month, spread evenly across the days it is in force." ;
+    sv:table "fct_premium_earned" ; sv:alias "premium" ; sv:primaryKey "premium_earning_id" .
+
+ins:Claim a owl:Class ;
+    rdfs:label "Claim" ;
+    rdfs:comment "A request for payment under a policy. Only settled claims count towards claims paid." ;
+    sv:table "fct_claims" ; sv:alias "claim" ; sv:primaryKey "claim_id" .
+
+# ---------- Relationships (object properties) ----------
+# sv:foreignKey is the column on the domain's table that points at the range's primary key.
+
+ins:coversProduct a owl:ObjectProperty ;
+    rdfs:label "covers product" ;
+    rdfs:domain ins:Policy ; rdfs:range ins:Product ;
+    sv:foreignKey "product_id" .
+
+ins:locatedIn a owl:ObjectProperty ;
+    rdfs:label "located in" ;
+    rdfs:domain ins:Policy ; rdfs:range ins:RiskZone ;
+    sv:foreignKey "risk_zone_id" .
+
+ins:earnedFor a owl:ObjectProperty ;
+    rdfs:label "earned for" ;
+    rdfs:domain ins:PremiumEarning ; rdfs:range ins:Policy ;
+    sv:foreignKey "policy_id" .
+
+ins:earnedInMonth a owl:ObjectProperty ;
+    rdfs:label "earned in month" ;
+    rdfs:domain ins:PremiumEarning ; rdfs:range ins:CalendarMonth ;
+    sv:foreignKey "month_key" .
+
+ins:madeUnder a owl:ObjectProperty ;
+    rdfs:label "made under" ;
+    rdfs:domain ins:Claim ; rdfs:range ins:Policy ;
+    sv:foreignKey "policy_id" .
+
+ins:settledInMonth a owl:ObjectProperty ;
+    rdfs:label "settled in month" ;
+    rdfs:domain ins:Claim ; rdfs:range ins:CalendarMonth ;
+    sv:foreignKey "settled_month_key" .
+
+# ---------- Attributes (datatype properties) ----------
+# sv:role says whether an attribute is something to group by (Dimension) or to add up (Fact).
+
+ins:productName a owl:DatatypeProperty ;
+    rdfs:label "product name" ; rdfs:domain ins:Product ; rdfs:range xsd:string ;
+    skos:altLabel "product", "line" ;
+    sv:column "product_name" ; sv:role sv:Dimension .
+
+ins:zoneName a owl:DatatypeProperty ;
+    rdfs:label "risk zone name" ; rdfs:domain ins:RiskZone ; rdfs:range xsd:string ;
+    skos:altLabel "risk zone", "zone" ;
+    sv:column "zone_name" ; sv:role sv:Dimension .
+
+ins:monthStart a owl:DatatypeProperty ;
+    rdfs:label "month" ; rdfs:domain ins:CalendarMonth ; rdfs:range xsd:date ;
+    rdfs:comment "First day of the month." ;
+    skos:altLabel "reporting month", "period" ;
+    sv:column "month_start" ; sv:role sv:Dimension .
+
+ins:policyInceptionDate a owl:DatatypeProperty ;
+    rdfs:label "policy inception date" ; rdfs:domain ins:Policy ; rdfs:range xsd:date ;
+    skos:altLabel "start date" ;
+    sv:column "inception_date" ; sv:role sv:Dimension .
+
+ins:claimStatus a owl:DatatypeProperty ;
+    rdfs:label "claim status" ; rdfs:domain ins:Claim ; rdfs:range xsd:string ;
+    rdfs:comment "open, settled or declined." ;
+    sv:column "claim_status" ; sv:role sv:Dimension .
+
+ins:premiumEarnedEur a owl:DatatypeProperty ;
+    rdfs:label "premium earned (EUR)" ; rdfs:domain ins:PremiumEarning ; rdfs:range xsd:decimal ;
+    sv:column "premium_earned_eur" ; sv:role sv:Fact .
+
+ins:settlementAmountEur a owl:DatatypeProperty ;
+    rdfs:label "settlement amount (EUR)" ; rdfs:domain ins:Claim ; rdfs:range xsd:decimal ;
+    rdfs:comment "Standardised to euros in staging." ;
+    sv:column "settlement_amount_eur" ; sv:role sv:Fact .
+
+# ---------- Metrics (defined once) ----------
+
+ins:earned_premium a sv:Metric ;
+    rdfs:label "earned premium" ;
+    rdfs:comment "Premium earned in the period, summed." ;
+    sv:onClass ins:PremiumEarning ;
+    sv:aggregation "SUM" ; sv:measures ins:premiumEarnedEur .
+
+ins:claims_paid a sv:Metric ;
+    rdfs:label "claims paid" ;
+    rdfs:comment "Settlement amounts of settled claims, dated by settlement month. Open reserves are excluded." ;
+    skos:altLabel "paid losses", "paid claims" ;
+    sv:onClass ins:Claim ;
+    sv:aggregation "SUM" ; sv:measures ins:settlementAmountEur ;
+    sv:filter "claim_status = 'settled'" .
+
+ins:claim_count a sv:Metric ;
+    rdfs:label "claims settled" ;
+    rdfs:comment "Distinct claims settled in the period." ;
+    skos:altLabel "number of claims" ;
+    sv:onClass ins:Claim ;
+    sv:aggregation "COUNT_DISTINCT" ; sv:measuresColumn "claim_id" ;
+    sv:filter "claim_status = 'settled'" .
+
+ins:loss_ratio a sv:Metric ;
+    rdfs:label "loss ratio" ;
+    rdfs:comment "Claims paid divided by earned premium, as a ratio of sums for any slice. Target 70%." ;
+    skos:altLabel "LR", "claims ratio" ;
+    sv:numerator ins:claims_paid ; sv:denominator ins:earned_premium ;
+    sv:target 0.70 .

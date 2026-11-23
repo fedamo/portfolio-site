@@ -1,0 +1,120 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { base } from '../../../lib';
+import sql from '../../../../public/semantic/portfolio_pulse_semantic_view.sql?raw';
+import ttl from '../../../../public/semantic/insurance.ttl?raw';
+
+const W = 200;
+const boxes = [
+  { id: 'product', x: 20, y: 20, h: 82, title: 'Product', table: 'dim_product', attrs: ['product name'] },
+  { id: 'zone', x: 500, y: 20, h: 82, title: 'Risk zone', table: 'dim_risk_zone', attrs: ['zone name'] },
+  { id: 'policy', x: 260, y: 150, h: 82, title: 'Policy', table: 'dim_policy', attrs: ['inception date'] },
+  { id: 'premium', x: 20, y: 286, h: 118, title: 'Premium earning', table: 'fct_premium_earned', attrs: ['premium earned (EUR)'], metrics: ['earned_premium'], fact: true },
+  { id: 'claim', x: 500, y: 286, h: 118, title: 'Claim', table: 'fct_claims', attrs: ['settlement amount, status'], metrics: ['claims_paid', 'claim_count'], fact: true },
+  { id: 'month', x: 260, y: 450, h: 82, title: 'Calendar month', table: 'dim_month', attrs: ['month start'] },
+];
+const edges = [
+  { d: 'M300 150 L180 102', lx: 236, ly: 146, label: 'covers product', anchor: 'end' },
+  { d: 'M420 150 L540 102', lx: 484, ly: 146, label: 'located in', anchor: 'start' },
+  { d: 'M140 286 L290 232', lx: 168, ly: 250, label: 'earned for' },
+  { d: 'M580 286 L430 232', lx: 552, ly: 250, label: 'made under' },
+  { d: 'M140 404 L270 450', lx: 150, ly: 448, label: 'earned in month' },
+  { d: 'M580 404 L450 450', lx: 570, ly: 448, label: 'settled in month' },
+];
+---
+<Base title="Portfolio Pulse data model · Defined Once" description="A sample insurance ontology, its diagram, and the script that derives a Snowflake semantic view from it.">
+  <article>
+    <p class="back"><a href={`${base}/dashboards/portfolio-pulse/index.html`}>← Portfolio Pulse</a></p>
+    <header class="post-header">
+      <h1>The model behind Portfolio Pulse</h1>
+      <p class="post-dek">A sample ontology for the dashboard's insurance data, and a script that turns it into a Snowflake semantic view. The business terms are written once, and the view is generated from them.</p>
+      <div class="post-meta"><span>Sample on synthetic data</span><span class="sep">·</span><a href={`${base}/semantic/insurance.ttl`}>insurance.ttl</a><span class="sep">·</span><a href={`${base}/semantic/derive_semantic_view.py`}>derive_semantic_view.py</a><span class="sep">·</span><a href={`${base}/semantic/portfolio_pulse_semantic_view.sql`}>generated SQL</a></div>
+    </header>
+
+    <figure class="onto">
+      <div class="onto-scroll">
+        <svg viewBox="0 0 720 540" role="img" aria-labelledby="onto-title onto-desc">
+          <title id="onto-title">Ontology diagram</title>
+          <desc id="onto-desc">Six classes. A policy covers a product and is located in a risk zone. Premium earnings are earned for a policy in a calendar month; claims are made under a policy and settled in a calendar month. Earned premium is measured on premium earnings, claims paid and claim count on claims, and loss ratio is claims paid divided by earned premium.</desc>
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="o-head" /></marker>
+          </defs>
+          {edges.map((e) => (<>
+            <path d={e.d} class="o-edge" marker-end="url(#arr)" />
+            <text x={e.lx} y={e.ly} class="o-rel" text-anchor={e.anchor ?? 'middle'}>{e.label}</text>
+          </>))}
+          <text x="360" y="332" class="o-metric" text-anchor="middle">loss_ratio</text>
+          <text x="360" y="350" class="o-metric o-sub" text-anchor="middle">claims_paid ÷ earned_premium</text>
+          <path d="M222 366 L498 366" class="o-derived" marker-end="url(#arr)" marker-start="url(#arr)" />
+          <text x="360" y="386" class="o-rel" text-anchor="middle">target 70%</text>
+          {boxes.map((b) => (
+            <g>
+              <rect x={b.x} y={b.y} width={W} height={b.h} rx="8" class={b.fact ? 'o-box o-fact' : 'o-box'} />
+              <text x={b.x + 14} y={b.y + 26} class="o-title">{b.title}</text>
+              <text x={b.x + 14} y={b.y + 46} class="o-table">{b.table}</text>
+              {b.attrs.map((a, i) => <text x={b.x + 14} y={b.y + 66 + i * 18} class="o-attr">{a}</text>)}
+              {b.metrics && b.metrics.map((m, i) => <text x={b.x + 14} y={b.y + 88 + i * 18} class="o-metric">{m}</text>)}
+            </g>
+          ))}
+        </svg>
+      </div>
+      <figcaption>Classes are business things. Arrows are relationships, each backed by a foreign key. Shaded boxes hold the facts that metrics add up.</figcaption>
+    </figure>
+
+    <div class="prose">
+      <h2>Three layers, one set of words</h2>
+      <p>The ontology describes the business in its own terms: a <strong>policy</strong> covers a <strong>product</strong>, a <strong>claim</strong> is made under a policy, and <strong>loss ratio</strong> is claims paid divided by earned premium. Each term carries a plain-English description and the other names people use for it, such as "LOB" for product or "LR" for loss ratio.</p>
+      <p>Each term also carries a small annotation saying where it lives in the warehouse: which table, which key, which column. That's the only link between the business layer and the physical one.</p>
+      <p>The semantic view is the third layer. It's what dashboards, notebooks and AI tools query, and it's generated from the ontology by a script, so it can't drift from the definitions.</p>
+
+      <h2>How the view is derived</h2>
+      <table>
+        <thead><tr><th>In the ontology</th><th>Becomes in the semantic view</th></tr></thead>
+        <tbody>
+          <tr><td>A class with a table annotation</td><td>A logical table with its primary key</td></tr>
+          <tr><td>A relationship between classes</td><td>A relationship, joined on the foreign key</td></tr>
+          <tr><td>An attribute marked as a fact</td><td>A fact (a number to add up)</td></tr>
+          <tr><td>An attribute marked as a dimension</td><td>A dimension (something to group or filter by)</td></tr>
+          <tr><td>A metric with an aggregation</td><td>A metric on its class's table, with any filter applied</td></tr>
+          <tr><td>A metric with a numerator and denominator</td><td>A derived metric, calculated as a ratio of sums</td></tr>
+          <tr><td>Description and other names</td><td>COMMENT and WITH SYNONYMS</td></tr>
+        </tbody>
+      </table>
+      <p>The script checks the ontology as it goes. A relationship with no foreign key, an attribute with no column, or a ratio that points at an undefined metric stops the build with a clear message instead of producing a broken view.</p>
+      <p>Run it with:</p>
+      <pre><code>pip install rdflib
+python derive_semantic_view.py insurance.ttl &gt; portfolio_pulse_semantic_view.sql</code></pre>
+
+      <h2>The generated view</h2>
+      <p>Synonyms matter most for natural-language tools: when someone asks for "paid losses by territory", the view already knows that means claims paid by risk zone.</p>
+      <pre><code>{sql}</code></pre>
+
+      <h2>The ontology</h2>
+      <p>Written in Turtle, a standard format for ontologies. Business terms use the <code>ins:</code> prefix and the warehouse annotations use <code>sv:</code>.</p>
+      <details class="onto-src"><summary>Show insurance.ttl</summary><pre><code>{ttl}</code></pre></details>
+
+      <h2>Why bother</h2>
+      <p>Adding a metric or a synonym is one edit to the ontology. The view, the dashboard's definition cards and an AI agent's vocabulary all follow from that edit. That's the same "define it once" idea as the rest of this site, one level further up.</p>
+      <p class="muted">This is a sample on synthetic data. Check the generated SQL against Snowflake's current CREATE SEMANTIC VIEW documentation before running it.</p>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .onto { margin: 8px 0 36px; }
+  .onto-scroll { overflow-x: auto; }
+  .onto svg { display: block; width: 100%; min-width: 600px; height: auto; font-family: var(--sans); }
+  .onto figcaption { margin-top: 10px; font-size: 14px; color: var(--muted); font-style: italic; font-family: var(--serif); }
+  .o-box { fill: var(--bg); stroke: var(--soft); stroke-width: 1.25; }
+  .o-fact { fill: var(--card); stroke: var(--accent); }
+  .o-title { font-family: var(--serif); font-size: 16px; font-weight: 600; fill: var(--fg); }
+  .o-table { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; fill: var(--muted); }
+  .o-attr { font-size: 12.5px; fill: var(--text); }
+  .o-metric { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 600; fill: var(--accent); }
+  .o-sub { font-weight: 400; }
+  .o-edge { fill: none; stroke: var(--soft); stroke-width: 1.25; }
+  .o-head { fill: var(--soft); }
+  .o-derived { fill: none; stroke: var(--accent); stroke-width: 1.25; stroke-dasharray: 4 4; }
+  .o-rel { font-size: 12px; fill: var(--muted); font-style: italic; }
+  .onto-src summary { cursor: pointer; font-family: var(--sans); font-size: 15px; color: var(--accent); }
+</style>
