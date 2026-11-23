@@ -449,13 +449,13 @@ filter: claim_status = 'settled'</pre>
     }
     // months where the loss ratio was above target: transparent red columns
     {
-      const last = Math.min(Math.floor(p), T - 1), half = (x(1) - x(0)) / 2;
+      const last = Math.min(Math.floor(p), N - 1), half = (x(1) - x(0)) / 2;
       let i = 0;
       while (i <= last) {
         if (D.lr[i] > TARGET) {
           let j = i; while (j + 1 <= last && D.lr[j + 1] > TARGET) j++;
           const x0 = Math.max(M.l, x(i) - half), x1 = Math.min(W - M.r, x(j) + half);
-          g += `<rect x="${x0.toFixed(1)}" y="${M.t}" width="${(x1 - x0).toFixed(1)}" height="${Hh - M.t - M.b}" fill="var(--high)" opacity="${j >= N ? .08 : .14}"><title>Loss ratio above ${TARGET * 100}% target</title></rect>`;
+          g += `<rect x="${x0.toFixed(1)}" y="${M.t}" width="${(x1 - x0).toFixed(1)}" height="${Hh - M.t - M.b}" fill="var(--high)" opacity=".14"><title>Loss ratio above ${TARGET * 100}% target</title></rect>`;
           i = j + 1;
         } else i++;
       }
