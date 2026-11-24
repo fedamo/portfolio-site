@@ -62,7 +62,7 @@ carry the business rules:
 
 - what "passed" means;
 - count real failures and ignore previews;
-- user counts are per model, not per person;
+- user counts are per model, so one person can count towards several models;
 - if the data can't answer, say so instead of guessing.
 
 Because the cards, the reports and the agent all read the same definitions, a number means the same thing wherever
@@ -73,8 +73,8 @@ you see it.
 The app calls the agent's REST run endpoint through Snowflake's built-in request helper. The endpoint is stateless, so
 the app sends the conversation history with every call, and shows the streamed reply exactly as it arrives.
 
-That helper only exists in the warehouse runtime for Streamlit, not the newer container runtime, which decided which
-runtime the app runs on.
+That helper only exists in Streamlit's warehouse runtime. The newer container runtime doesn't have it, so the app
+runs on the warehouse runtime.
 
 ## Five files and a careful deploy
 
@@ -84,7 +84,7 @@ I run it locally.
 
 The deploy script compares the stage with my local files and uploads only what changed. A guard stops it doing anything
 except listing the stage and uploading those five files. Afterwards it refreshes the stage directory and checks the file
-sizes match. That last step came from a real problem: after one upload the app kept serving the old files, because the
+sizes match. That last step came from a real problem. After one upload the app kept serving the old files, because the
 stage directory doesn't refresh itself after a connector upload.
 
 ## How I tested it

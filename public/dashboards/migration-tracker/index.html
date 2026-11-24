@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #ffffff; --side: #f0f2f6; --ink: #31333f; --ink-2: #555867; --ink-3: #8a8d99; --line: #e6e8ee; --soft: #f7f8fa;
+  --bg: #ffffff; --side: #f0f2f6; --ink: #31333f; --ink-2: #555867; --ink-3: #6b6e7a; --line: #e6e8ee; --soft: #f7f8fa;
   --primary: #ff4b4b;
   --s-deployed: #1f2a24; --s-review: #6b3fd4; --s-ready: #116a5a; --s-pass: #2e8b3a; --s-wait: #2156b8; --s-fix: #e07a1f; --s-new: #c6262e; --s-hold: #5d6170;
   --mono: 'Source Code Pro', ui-monospace, Menlo, monospace;
@@ -45,8 +45,8 @@ h1 { font-size: 30px; font-weight: 700; margin: 0 0 4px; }
 .agent { background: #2d6fd0; color: #fff; border: 0; border-radius: 10px; padding: 10px 18px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 6px rgba(33, 86, 184, .3); }
 .stamp.fresh { background: #eef7ee; border-color: #b9dcbc; } .stamp.fresh small, .stamp.fresh em { color: #2e7d32; }
 .stamp { background: #fff8e1; border: 1px solid #f2d58a; border-radius: 6px; padding: 6px 12px; font-size: 13px; }
-.stamp small { display: block; color: #a47610; font-size: 11px; }
-.stamp em { font-style: normal; color: #c48a12; margin-left: 6px; }
+.stamp small { display: block; color: #7d5700; font-size: 11px; }
+.stamp em { font-style: normal; color: #7d5700; margin-left: 6px; }
 
 .summary { border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px 16px; margin: 22px 0 14px; }
 .big { display: flex; align-items: baseline; gap: 10px; }
@@ -70,7 +70,7 @@ details.exp summary { padding: 14px 16px; cursor: pointer; list-style: none; dis
 details.exp summary::after { content: "⌄"; color: var(--ink-3); }
 details.exp[open] summary::after { content: "⌃"; }
 details.exp summary::-webkit-details-marker { display: none; }
-details.exp[open] summary { color: var(--primary); }
+details.exp[open] summary { color: #c81e1e; }
 .expbody { padding: 0 16px 16px; font-size: 15px; color: var(--ink-2); }
 .radios { display: flex; gap: 22px; flex-wrap: wrap; margin: 6px 0 12px; }
 .radios label { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; color: var(--ink); }
@@ -85,7 +85,7 @@ details.exp[open] summary { color: var(--primary); }
 .controls .lbl { font-size: 14px; color: var(--ink-2); margin-bottom: 6px; display: block; }
 .sortsel { background: var(--side); }
 .reload { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
-.reload:hover { border-color: var(--primary); color: var(--primary); }
+.reload:hover { border-color: var(--primary); color: #c81e1e; }
 .count { font-weight: 700; font-size: 18px; margin: 6px 0 12px; }
 
 /* Cards */
