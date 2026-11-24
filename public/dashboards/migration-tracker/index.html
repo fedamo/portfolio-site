@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Migration Tracker (mock-up)</title>
+<meta name="description" content="Mock-up of a migration status app: progress of BI semantic models moving from Synapse to Snowflake. Made-up models and data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --side: #f0f2f6; --ink: #31333f; --ink-2: #555867; --ink-3: #8a8d99; --line: #e6e8ee; --soft: #f7f8fa;
+  --primary: #ff4b4b;
+  --s-deployed: #1f2a24; --s-review: #6b3fd4; --s-ready: #116a5a; --s-pass: #2e8b3a; --s-wait: #2156b8; --s-fix: #e07a1f; --s-new: #c6262e; --s-hold: #5d6170;
+  --mono: 'Source Code Pro', ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Source Sans 3', system-ui, sans-serif; font-size: 16px; }
+button, input, select { font: inherit; color: inherit; }
+.app { display: grid; grid-template-columns: 300px minmax(0, 1fr); min-height: 100vh; }
+.app.nofilters { grid-template-columns: 0 minmax(0, 1fr); }
+.app.nofilters aside .filters { display: none; }
+
+/* Sidebar */
+aside { background: var(--side); padding: 28px 20px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.app.nofilters aside { padding: 0; overflow: visible; }
+.showf { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; cursor: pointer; white-space: nowrap; }
+.app.nofilters .showf { position: fixed; top: 14px; left: 14px; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; z-index: 5; margin: 0; }
+.filters h2 { font-size: 14px; letter-spacing: .06em; text-transform: uppercase; margin: 0 0 14px; color: var(--ink-2); font-weight: 600; }
+.fld { display: grid; gap: 6px; margin-bottom: 16px; }
+.fld label { font-size: 14px; }
+.fld input[type=search], .fld select, .sortsel { width: 100%; background: #fff; border: 1px solid transparent; border-radius: 8px; padding: 9px 12px; outline: none; }
+.fld input[type=search]:focus, .fld select:focus, .sortsel:focus { border-color: var(--primary); }
+.fld select:invalid, .fld select.ph { color: var(--ink-3); }
+input[type=checkbox], input[type=radio] { accent-color: var(--primary); width: 16px; height: 16px; margin: 0; }
+.chk { display: flex; align-items: center; gap: 10px; font-size: 15px; cursor: pointer; }
+
+/* Main */
+main { padding: 32px 40px 60px; min-width: 0; }
+.top { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+h1 { font-size: 30px; font-weight: 700; margin: 0 0 4px; }
+.subt { color: var(--ink-3); font-size: 15px; margin: 0; }
+.topright { display: grid; gap: 12px; justify-items: end; }
+.agent { background: #2d6fd0; color: #fff; border: 0; border-radius: 10px; padding: 10px 18px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 6px rgba(33, 86, 184, .3); }
+.stamp { background: #fff8e1; border: 1px solid #f2d58a; border-radius: 6px; padding: 6px 12px; font-size: 13px; }
+.stamp small { display: block; color: #a47610; font-size: 11px; }
+.stamp em { font-style: normal; color: #c48a12; margin-left: 6px; }
+
+.summary { border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px 16px; margin: 22px 0 14px; }
+.big { display: flex; align-items: baseline; gap: 10px; }
+.big b { font-size: 56px; line-height: 1; font-weight: 700; }
+.big span { font-size: 22px; color: var(--ink-2); }
+.sub2 { color: var(--ink-3); font-size: 14px; margin: 6px 0 16px; }
+.bar { display: flex; height: 40px; border-radius: 6px; overflow: hidden; gap: 2px; }
+.bar button { border: 0; color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; min-width: 8px; padding: 0; }
+.bar button:hover, .bar button.on { filter: brightness(1.12); box-shadow: inset 0 -4px 0 rgba(0,0,0,.25); }
+.groups { position: relative; height: 40px; margin-top: 4px; font-size: 14px; }
+.groups div { position: absolute; top: 0; border: 1.5px solid var(--ink-3); border-top: 0; height: 9px; border-radius: 0 0 6px 6px; }
+.groups div span { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); white-space: nowrap; color: var(--ink-2); }
+.groups div:first-child span { left: 0; transform: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--ink-2); margin-top: 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.legend b { color: var(--ink); font-weight: 600; }
+
+details.exp { border: 1px solid var(--line); border-radius: 8px; margin: 10px 0; }
+details.exp summary { padding: 14px 16px; cursor: pointer; list-style: none; display: flex; justify-content: space-between; font-size: 15px; }
+details.exp summary::after { content: "⌄"; color: var(--ink-3); }
+details.exp[open] summary::after { content: "⌃"; }
+details.exp summary::-webkit-details-marker { display: none; }
+details.exp[open] summary { color: var(--primary); }
+.expbody { padding: 0 16px 16px; font-size: 15px; color: var(--ink-2); }
+.radios { display: flex; gap: 22px; flex-wrap: wrap; margin: 6px 0 12px; }
+.radios label { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; color: var(--ink); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 10px 0; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+.stat small { font-size: 14px; color: var(--ink-2); }
+.stat b { display: block; font-size: 30px; color: var(--s-pass); }
+.stat.down b { color: var(--s-new); }
+.keyrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
+
+.controls { display: grid; grid-template-columns: minmax(200px, 1.4fr) auto auto auto; gap: 18px 28px; align-items: end; margin: 22px 0 18px; }
+.controls .lbl { font-size: 14px; color: var(--ink-2); margin-bottom: 6px; display: block; }
+.sortsel { background: var(--side); }
+.reload { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.reload:hover { border-color: var(--primary); color: var(--primary); }
+.count { font-weight: 700; font-size: 18px; margin: 6px 0 12px; }
+
+/* Cards */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; align-items: start; }
+.card { border: 1px solid var(--line); border-left: 5px solid var(--c); border-radius: 10px; background: color-mix(in srgb, var(--c) 5%, #fff); }
+.card .head { padding: 12px 14px 10px; cursor: pointer; display: grid; gap: 6px; position: relative; }
+.card .head:hover { background: color-mix(in srgb, var(--c) 6%, transparent); }
+.card .head:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; border-radius: 8px; }
+.card h3 { margin: 0; font-size: 17px; font-weight: 700; padding-right: 64px; }
+.ws { font-family: var(--mono); font-size: 13px; color: var(--ink-3); }
+.tier { position: absolute; top: 12px; right: 14px; border: 1px solid var(--ink-3); color: var(--ink-2); border-radius: 999px; font-size: 12px; padding: 0 8px; }
+.pills { display: flex; flex-wrap: wrap; gap: 5px; }
+.pill { font-size: 12px; border-radius: 999px; padding: 2px 9px; border: 1.25px solid var(--ink-3); color: var(--ink-2); white-space: nowrap; letter-spacing: .02em; }
+.pill.solid { color: #fff; border-color: transparent; background: var(--pc); font-weight: 700; text-transform: uppercase; }
+.pill.fail { border-color: var(--s-new); color: var(--s-new); }
+.pill.dash { border-style: dashed; }
+.pill.parity { border-color: #6b7a99; color: #34405c; }
+.meta { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-3); gap: 10px; }
+.compact .card .pills, .compact .card .meta { display: none; }
+.compact .grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+
+.detail { border-top: 1px solid var(--line); padding: 14px 16px 16px; font-size: 14px; display: grid; gap: 12px; background: #fff; border-radius: 0 0 10px 10px; }
+.card.open { grid-column: 1 / -1; }
+.detail { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; }
+.detail > .sysbox, .detail > .kv { grid-column: 1; }
+.detail > .right { grid-column: 2; grid-row: 1 / span 2; display: grid; gap: 12px; align-content: start; }
+.sysbox { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; grid-template-columns: 82px minmax(120px, auto) minmax(0, 1fr); gap: 8px 12px; align-items: center; }
+.sysbox .state { border: 1.25px solid var(--ink-3); border-radius: 999px; padding: 1px 10px; font-size: 13px; justify-self: start; }
+.sysbox p { margin: 0; color: var(--ink-2); }
+.kv { display: grid; grid-template-columns: 130px 1fr; gap: 4px 12px; }
+.kv dt { color: var(--ink-2); } .kv dd { margin: 0; }
+.dlabel { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 4px 0 -4px; }
+.story { border-left: 3px solid #2d6fd0; padding-left: 10px; display: grid; gap: 2px; }
+.story a { color: #2a4d9b; font-weight: 600; text-decoration: none; }
+.story small { color: var(--ink-3); }
+.says { background: var(--soft); border-radius: 6px; padding: 8px 10px; }
+.events { display: grid; grid-template-columns: 112px 1fr; gap: 8px 10px; font-size: 13px; }
+.events time { color: var(--ink-3); }
+.events .tr { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.events .tr .pill { font-size: 11px; text-transform: uppercase; }
+.events p { margin: 4px 0 0; color: var(--ink-2); grid-column: 2; }
+.empty { color: var(--ink-3); padding: 30px 0; }
+
+.note { margin-top: 36px; font-size: 13px; color: var(--ink-3); border-top: 1px solid var(--line); padding-top: 12px; }
+.note a { color: var(--ink-2); }
+
+@media (max-width: 860px) {
+  .app, .app.nofilters { grid-template-columns: 1fr; }
+  aside { position: static; height: auto; }
+  .app.nofilters aside { height: 0; }
+  main { padding: 24px 16px 48px; }
+  .app.nofilters main { padding-top: 60px; }
+  .controls { grid-template-columns: 1fr 1fr; }
+  .stats { grid-template-columns: 1fr; }
+  .groups { font-size: 12px; }
+  .grid { grid-template-columns: 1fr; }
+  .detail { grid-template-columns: 1fr; }
+  .detail > .right { grid-column: 1; grid-row: auto; }
+  .sysbox { grid-template-columns: 76px 1fr; }
+  .sysbox p { grid-column: 1 / -1; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside>
+    <label class="showf"><input type="checkbox" id="showf" checked> Show filters</label>
+    <div class="filters">
+      <h2>Filters</h2>
+      <div class="fld"><label for="f-q">Search</label><input type="search" id="f-q" placeholder="Model, workspace or text"></div>
+      <div class="fld"><label for="f-stage">Stage</label><select id="f-stage"></select></div>
+      <div class="fld"><label for="f-pipe">Pipeline state</label><select id="f-pipe"></select></div>
+      <div class="fld"><label for="f-ready">Readiness</label><select id="f-ready"></select></div>
+      <div class="fld"><label for="f-tier">Conversion tier</label><select id="f-tier"></select></div>
+      <div class="fld"><label for="f-issue">Issue</label><select id="f-issue"></select></div>
+      <div class="fld"><label for="f-owner">Likely owner</label><select id="f-owner"></select></div>
+      <div class="fld"><label for="f-ws">Workspace</label><select id="f-ws"></select></div>
+      <label class="chk"><input type="checkbox" id="f-signin"> <span id="signin-lbl">Needs an owner sign-in</span></label>
+    </div>
+  </aside>
+
+  <main id="main">
+    <div class="top">
+      <div>
+        <h1>Power BI migration status</h1>
+        <p class="subt">90 in-scope models · Synapse to Snowflake · non-production data</p>
+      </div>
+      <div class="topright">
+        <button class="agent" id="agent">› Ask migration agent</button>
+        <div class="stamp"><small>Pipeline data as of</small><span id="stamp"></span><em id="stamp-age"></em></div>
+      </div>
+    </div>
+
+    <section class="summary" aria-label="Progress">
+      <div class="big"><b id="deployed">0</b><span>of 90 deployed</span></div>
+      <p class="sub2" id="sub2"></p>
+      <div class="bar" id="bar"></div>
+      <div class="groups" id="groups"></div>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <details class="exp" id="changed">
+      <summary id="changed-sum">What changed: no stage changes in the last load</summary>
+      <div class="expbody">
+        <p style="margin:0">Window</p>
+        <div class="radios" id="window">
+          <label><input type="radio" name="win" value="load" checked> Since last load</label>
+          <label><input type="radio" name="win" value="24h"> 24 hours</label>
+          <label><input type="radio" name="win" value="7d"> 7 days</label>
+        </div>
+        <p id="win-text" style="margin:0"></p>
+        <div class="stats">
+          <div class="stat"><small>Moved forward</small><b id="st-fwd">0</b></div>
+          <div class="stat"><small>Newly passed</small><b id="st-pass">0</b></div>
+          <div class="stat down"><small>Moved back</small><b id="st-back">0</b></div>
+        </div>
+        <p id="win-list" style="margin:0"></p>
+        <label class="chk" style="margin-top:10px"><input type="checkbox" id="only-changed"> Show only the cards that changed stage</label>
+      </div>
+    </details>
+
+    <details class="exp">
+      <summary>How to read the cards</summary>
+      <div class="expbody">
+        <p>The colour down the left of each card is its stage, using the same colours as the progress bar. The first pill is what the pipeline is doing with the model right now. The other pills are checks.</p>
+        <div class="keyrow"><span class="pill solid" style="--pc:var(--s-pass)">✓ Structural pass</span> every table, column and measure matches the production model.</div>
+        <div class="keyrow"><span class="pill fail">✕ Structural FAIL</span> something in the model's structure differs from production.</div>
+        <div class="keyrow"><span class="pill parity">Parity preview 16/24</span> tables whose values match production in a preview run. A preview is a guide only, because the data cut-offs differ.</div>
+        <div class="keyrow"><span class="pill">READY</span> <span class="pill">OBJECTS EXIST</span> <span class="pill">objects missing</span> whether the Snowflake objects the model needs exist.</div>
+        <div class="keyrow"><span class="pill dash">Snowflake tables are empty</span> dashed pills flag a blocker to look at.</div>
+        <p>Click a card for its details, work items and recent pipeline events.</p>
+      </div>
+    </details>
+
+    <details class="exp">
+      <summary>Reports from the pipeline views</summary>
+      <div class="expbody" id="reports"></div>
+    </details>
+
+    <div class="controls">
+      <div><span class="lbl">Sort by</span>
+        <select class="sortsel" id="sort">
+          <option value="progress">Progress (furthest first)</option>
+          <option value="users">Users (90 days)</option>
+          <option value="updated">Recently updated</option>
+          <option value="name">Model name</option>
+          <option value="parity">Parity preview (best first)</option>
+        </select>
+      </div>
+      <label class="chk"><input type="checkbox" id="reverse"> Reverse</label>
+      <div><span class="lbl">Card size</span>
+        <div class="radios" style="margin:0" id="size">
+          <label><input type="radio" name="size" value="cards" checked> Cards</label>
+          <label><input type="radio" name="size" value="compact"> Compact</label>
+        </div>
+      </div>
+      <button class="reload" id="reload">Reload data</button>
+    </div>
+
+    <p class="count" id="count"></p>
+    <div class="grid" id="grid"></div>
+
+    <p class="note">Mock-up of a migration tracker built as a Streamlit app on Snowflake. Every model name, workspace, person and number here is made up. <a href="/projects/semantic-model-migration/">Read about the migration</a>.</p>
+  </main>
+</div>
+
+<script>
+(() => {
+  // ---------- stages (furthest first) ----------
+  const STAGES = [
+    { id: "deployed", name: "Deployed", short: "DEPLOYED", c: "var(--s-deployed)" },
+    { id: "review", name: "In business review", short: "IN REVIEW", c: "var(--s-review)" },
+    { id: "ready", name: "Ready for business review", short: "READY FOR REVIEW", c: "var(--s-ready)" },
+    { id: "pass", name: "Passed structural test", short: "✓ Structural pass", c: "var(--s-pass)" },
+    { id: "wait", name: "Waiting on Snowflake data", short: "◔ Awaiting data", c: "var(--s-wait)" },
+    { id: "fix", name: "In Dev01, being fixed", short: "◔ Structural fail", c: "var(--s-fix)" },
+    { id: "new", name: "Not converted yet", short: "Not converted", c: "var(--s-new)" },
+    { id: "hold", name: "On hold or no Prod pair", short: "On hold", c: "var(--s-hold)" },
+  ];
+  const SI = Object.fromEntries(STAGES.map((s, i) => [s.id, i]));
+  const COUNTS = { deployed: 0, review: 0, ready: 0, pass: 4, wait: 6, fix: 16, new: 63, hold: 1 };
+  const GROUPS = [
+    { label: "Passed testing", ids: ["deployed", "review", "ready", "pass"] },
+    { label: "In Dev01", ids: ["wait", "fix"] },
+    { label: "Not started", ids: ["new", "hold"] },
+  ];
+
+  // ---------- made-up models ----------
+  let seed = 4207;
+  const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+  const pick = a => a[Math.floor(rnd() * a.length)];
+  const int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+
+  const NAMES = ["Claims Aging Summary", "Broker Commission Tracker", "Policy Renewals Pipeline", "Premium Bordereaux", "Loss Run Explorer",
+    "Underwriting Workbench", "Quote to Bind Funnel", "Carrier Scorecard", "Daily Cash Receipts", "Cat Exposure Monitor",
+    "Producer Production", "Submission Intake Trends", "Billing Exceptions", "Reinsurance Recoverables", "Program Profitability",
+    "Endorsement Activity", "Agency Hierarchy", "Collections Forecast", "Supplier Payments", "Unearned Premium Roll",
+    "Fee Income Bridge", "Earnings Walk", "Monthly Close Pack", "Claims Reserve Movement", "Policy Count Trends",
+    "Pending Policy Issuance", "Quote Pipeline", "Benefit Plan Mix", "Daily Volume Trends", "Refresh Duration Insights",
+    "Workspace Usage Stats", "Metadata Inventory", "Peer Benchmarking", "Exception Workflow", "Treaty Placement",
+    "Surplus Lines Tax", "Certificates Issued", "Premium Finance", "Loss Ratio by Line", "Retention Analysis",
+    "Cross-sell Opportunities", "New Business Hit Ratio", "Claim Litigation Tracker", "Subrogation Recovery", "Large Loss Watchlist",
+    "Expense Allocation", "Headcount Planning", "Budget vs Actual", "General Ledger Detail", "Intercompany Recon",
+    "Data Quality Scorecard", "Dataset Refresh Monitor", "Capacity Utilisation", "Gateway Health", "Report Usage",
+    "Territory Mix", "Binding Authority Audit", "Coverholder Returns", "Risk Survey Findings", "Inspection Backlog",
+    "Customer Complaints", "Service Level Tracker", "Policy Admin Feed", "Bordereaux Reconciliation", "Rate Change Monitor",
+    "Pricing Adequacy", "Portfolio Mix", "Wholesale Dashboard", "Specialty Lines Overview", "Property Schedule",
+    "Fleet Exposure", "Workers Comp Payroll", "Medical Stop Loss", "Life Policy Inforce", "Annuity Flows",
+    "Commission Statements", "Agent Onboarding", "Market Placement", "Carrier Appetite", "Declinations Analysis",
+    "Renewal Retention", "Premium Audit", "Experience Mod Tracker", "Claims Handler Workload", "FNOL Volumes",
+    "Reserve Adequacy", "Payment Run Review", "Vendor Spend", "Policy Lapse Watch", "Executive Summary"];
+  const WS = ["finance-rpts", "underwriting-analytics", "claims-reporting", "accounting-operations", "bi-and-analytics", "bi-and-analytics-tools", "uw-portfolio-reporting", "distribution-insights"];
+  const OWNERS = ["Alex Rivera", "Priya Natarajan", "Sam Okafor", "Jordan Lee", "Casey Morgan", "Taylor Brooks", "Unassigned"];
+
+  const NOW = new Date(2026, 10, 23, 20, 9);
+  const LOAD = new Date(2026, 10, 10, 19, 38), PREV = new Date(2026, 10, 10, 15, 47);
+  const daysAgo = d => Math.round((NOW - d) / 864e5);
+  const fmtDT = d => d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + " EST";
+  const minus = (d, days, h = 0) => new Date(d - days * 864e5 - h * 36e5);
+
+  const stageList = [];
+  STAGES.forEach(s => { for (let i = 0; i < COUNTS[s.id]; i++) stageList.push(s.id); });
+
+  const models = stageList.map((stage, i) => {
+    const tier = stage === "pass" ? 2 : pick([1, 2, 2, 2, 3, 3]);
+    const tables = int(12, 140) * (rnd() < .2 ? 6 : 1);
+    const m = { id: i, name: NAMES[i], ws: pick(WS), stage, tier, owner: pick(OWNERS), users: int(3, 260), tables };
+    m.updated = minus(LOAD, stage === "new" ? int(20, 60) : int(5, 25), int(0, 12));
+    m.refreshed = minus(m.updated, int(0, 2), int(1, 8));
+    m.signin = stage === "pass" && i === 2;
+    m.mixed = rnd() < .12;
+    if (stage === "pass") { m.pipe = "Structural pass"; m.objects = m.mixed ? "objects missing" : "READY"; m.matched = Math.round(tables * (.6 + rnd() * .35)); m.structural = "PASS"; m.issues = m.mixed ? ["Partly on Snowflake"] : []; }
+    else if (stage === "wait") { m.pipe = "Awaiting data"; m.objects = "OBJECTS EXIST"; m.matched = int(0, 3); m.structural = "FAIL"; m.issues = ["Snowflake tables are empty"]; }
+    else if (stage === "fix") {
+      m.refreshFailed = rnd() < .15;
+      m.pipe = m.refreshFailed ? "Refresh failed" : "Structural fail";
+      m.objects = pick(["READY", "OBJECTS EXIST", "objects missing"]); m.matched = Math.round(tables * (.45 + rnd() * .5)); m.structural = "FAIL";
+      m.issues = m.refreshFailed ? ["Refresh did not finish"] : ["Differs from Prod"];
+    } else if (stage === "hold") { m.pipe = "On hold"; m.objects = "—"; m.matched = null; m.structural = "—"; m.issues = ["No Prod pair"]; }
+    else { m.pipe = "Not converted"; m.objects = rnd() < .3 ? "OBJECTS EXIST" : "objects missing"; m.matched = null; m.structural = "—"; m.issues = []; }
+    m.parity = m.matched == null ? null : `${m.matched}/${tables}`;
+    m.work = stage === "new" ? [] : [{ id: 740000 + int(100, 9999), owner: m.owner, state: stage === "pass" ? "Pending deployment" : "Active", when: minus(m.updated, 1) }];
+    return m;
+  });
+
+  // ---------- helpers ----------
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const stageOf = id => STAGES[SI[id]];
+  const pctMatch = m => m.matched == null ? -1 : m.matched / m.tables;
+
+  // ---------- filters ----------
+  const opts = (sel, list, ph = "Choose an option") => {
+    $(sel).innerHTML = `<option value="">${ph}</option>` + list.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+    $(sel).classList.add("ph");
+    $(sel).addEventListener("change", e => { e.target.classList.toggle("ph", !e.target.value); render(); });
+  };
+  opts("f-stage", STAGES.map(s => s.name));
+  opts("f-pipe", [...new Set(models.map(m => m.pipe))]);
+  opts("f-ready", ["READY", "OBJECTS EXIST", "objects missing"]);
+  opts("f-tier", ["Tier 1", "Tier 2", "Tier 3"]);
+  opts("f-issue", [...new Set(models.flatMap(m => m.issues))]);
+  opts("f-owner", [...new Set(models.map(m => m.owner))].sort());
+  opts("f-ws", [...new Set(models.map(m => m.ws))].sort(), "All");
+  $("signin-lbl").textContent = `Needs an owner sign-in (${models.filter(m => m.signin).length})`;
+
+  const st = { open: new Set([0]), barStage: null };
+
+  const filtered = () => {
+    const q = $("f-q").value.trim().toLowerCase();
+    const v = id => $(id).value;
+    let list = models.filter(m =>
+      (!q || [m.name, m.ws, m.owner, ...m.issues].join(" ").toLowerCase().includes(q)) &&
+      (!v("f-stage") || stageOf(m.stage).name === v("f-stage")) &&
+      (!st.barStage || m.stage === st.barStage) &&
+      (!v("f-pipe") || m.pipe === v("f-pipe")) &&
+      (!v("f-ready") || m.objects === v("f-ready")) &&
+      (!v("f-tier") || "Tier " + m.tier === v("f-tier")) &&
+      (!v("f-issue") || m.issues.includes(v("f-issue"))) &&
+      (!v("f-owner") || m.owner === v("f-owner")) &&
+      (!v("f-ws") || m.ws === v("f-ws")) &&
+      (!$("f-signin").checked || m.signin) &&
+      (!$("only-changed").checked || changedIds().has(m.id)));
+    const key = $("sort").value;
+    const cmp = {
+      progress: (a, b) => SI[a.stage] - SI[b.stage] || pctMatch(b) - pctMatch(a) || b.users - a.users,
+      users: (a, b) => b.users - a.users,
+      updated: (a, b) => b.updated - a.updated,
+      name: (a, b) => a.name.localeCompare(b.name),
+      parity: (a, b) => pctMatch(b) - pctMatch(a),
+    }[key];
+    list.sort(cmp);
+    if ($("reverse").checked) list.reverse();
+    return list;
+  };
+
+  // ---------- summary bar ----------
+  const drawSummary = () => {
+    const total = models.length;
+    const passedOrBeyond = models.filter(m => SI[m.stage] <= SI.pass).length;
+    $("deployed").textContent = COUNTS.deployed;
+    $("sub2").textContent = `${passedOrBeyond} passed the structural test or are further along · 0 have a parity result`;
+    $("bar").innerHTML = STAGES.filter(s => COUNTS[s.id] > 0).map(s =>
+      `<button style="flex:${COUNTS[s.id]};background:${s.c}" data-s="${s.id}" class="${st.barStage === s.id ? "on" : ""}" title="${s.name}: ${COUNTS[s.id]}" aria-label="${s.name}: ${COUNTS[s.id]}. Filter cards">${COUNTS[s.id] >= 3 ? COUNTS[s.id] : ""}</button>`).join("");
+    let acc = 0;
+    $("groups").innerHTML = GROUPS.map(g => {
+      const n = g.ids.reduce((a, id) => a + COUNTS[id], 0);
+      const left = acc / total * 100, w = n / total * 100; acc += n;
+      return `<div style="left:calc(${left}% + 2px);width:calc(${w}% - 4px)"><span>${g.label} ${n}</span></div>`;
+    }).join("");
+    $("legend").innerHTML = STAGES.map(s => `<span><i style="background:${s.c}"></i>${s.name} <b>${COUNTS[s.id]}</b></span>`).join("");
+    $("bar").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+      st.barStage = st.barStage === b.dataset.s ? null : b.dataset.s; drawSummary(); render();
+    }));
+  };
+
+  // ---------- what changed ----------
+  const WINDOWS = {
+    load: { from: PREV, text: `The load at ${fmtDT(LOAD)} against the one before it, at ${fmtDT(PREV)}.` },
+    "24h": { from: minus(LOAD, 1), text: `Loads in the 24 hours before ${fmtDT(LOAD)}.` },
+    "7d": { from: minus(LOAD, 7), text: `Loads in the 7 days before ${fmtDT(LOAD)}.` },
+  };
+  // made-up stage moves inside the last week
+  const MOVES = [
+    { id: models.findIndex(m => m.stage === "pass"), from: "fix", to: "pass", when: minus(LOAD, 5, 3) },
+    { id: models.findIndex(m => m.stage === "wait"), from: "new", to: "wait", when: minus(LOAD, 3, 6) },
+    { id: models.findIndex(m => m.stage === "fix"), from: "pass", to: "fix", when: minus(LOAD, 6, 2) },
+  ];
+  const changedIds = () => {
+    const w = WINDOWS[document.querySelector("input[name=win]:checked").value];
+    return new Set(MOVES.filter(mv => mv.when > w.from).map(mv => mv.id));
+  };
+  const drawChanged = () => {
+    const w = WINDOWS[document.querySelector("input[name=win]:checked").value];
+    const mv = MOVES.filter(x => x.when > w.from);
+    const fwd = mv.filter(x => SI[x.to] < SI[x.from]), back = mv.filter(x => SI[x.to] > SI[x.from]);
+    $("win-text").textContent = w.text;
+    $("st-fwd").textContent = fwd.length;
+    $("st-pass").textContent = fwd.filter(x => x.to === "pass").length;
+    $("st-back").textContent = back.length;
+    $("win-list").innerHTML = mv.length
+      ? mv.map(x => `<strong>${esc(models[x.id].name)}</strong>: ${stageOf(x.from).name} → ${stageOf(x.to).name}`).join("<br>")
+      : "No model changed stage in this window.<br>1 model ran with no stage change";
+    $("changed-sum").textContent = mv.length ? `What changed: ${mv.length} stage change${mv.length > 1 ? "s" : ""} in this window` : "What changed: no stage changes in the last load";
+  };
+
+  // ---------- reports ----------
+  const drawReports = () => {
+    const byIssue = {}; models.forEach(m => m.issues.forEach(i => byIssue[i] = (byIssue[i] || 0) + 1));
+    const byWs = {}; models.forEach(m => { byWs[m.ws] = byWs[m.ws] || [0, 0]; byWs[m.ws][0]++; if (SI[m.stage] <= SI.pass) byWs[m.ws][1]++; });
+    $("reports").innerHTML =
+      `<p><strong>Open issues</strong><br>${Object.entries(byIssue).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${esc(k)}: ${n}`).join("<br>")}</p>` +
+      `<p><strong>By workspace (passed / in scope)</strong><br>${Object.entries(byWs).sort().map(([k, [n, p]]) => `<span style="font-family:var(--mono)">${esc(k)}</span>: ${p} / ${n}`).join("<br>")}</p>`;
+  };
+
+  // ---------- cards ----------
+  const pills = m => {
+    const s = stageOf(m.stage);
+    const p = [];
+    const pc = m.refreshFailed ? "var(--s-fix)" : s.c;
+    p.push(`<span class="pill solid" style="--pc:${pc}">${m.refreshFailed ? "◔ Refresh failed" : s.short}</span>`);
+    if (m.objects && m.objects !== "—") p.push(`<span class="pill">${m.objects}</span>`);
+    if (m.structural === "FAIL" && m.stage !== "fix") p.push(`<span class="pill fail">✕ Structural FAIL</span>`);
+    if (m.stage === "fix" && !m.refreshFailed) p.push(`<span class="pill fail">✕ Structural FAIL</span>`);
+    if (m.parity) p.push(`<span class="pill parity">Parity preview ${m.parity}</span>`);
+    m.issues.forEach(i => p.push(`<span class="pill dash">${esc(i)}</span>`));
+    return p.join("");
+  };
+
+  const events = m => {
+    const ev = [];
+    const t = m.updated;
+    if (m.stage === "pass") {
+      ev.push([t, "Refreshed", "Structural pass", `structural PASS; parity preview ${m.parity} equal (cutoff differs: not a parity result)`]);
+      ev.push([minus(t, 0, 7), "Awaiting analyst", "Refreshed", ""]);
+      ev.push([minus(t, 3, 2), "Structural pass", "Awaiting analyst", "no analyst branch yet; Dev01 holds the automatic conversion, which is not relied on. Pre-check: reads Snowflake and other sources."]);
+      ev.push([minus(t, 8, 6), "Refreshed", "Structural pass", ""]);
+    } else if (m.stage === "wait") {
+      ev.push([t, "Refreshed", "Awaiting data", "objects exist but Snowflake tables are empty; waiting on the data load"]);
+      ev.push([minus(t, 4), "Converted", "Refreshed", ""]);
+    } else if (m.stage === "fix") {
+      ev.push([t, m.refreshFailed ? "Refreshing" : "Refreshed", m.refreshFailed ? "Refresh failed" : "Structural fail", m.refreshFailed ? "refresh did not finish in Dev01; check the gateway and credentials" : `structural FAIL; ${m.tables - m.matched} tables differ from Prod`]);
+      ev.push([minus(t, 5), "Converted", "Refreshed", ""]);
+    } else if (m.stage === "hold") {
+      ev.push([t, "Triage", "On hold", "no production model to compare against"]);
+    }
+    return ev;
+  };
+
+  const detail = m => {
+    const s = stageOf(m.stage);
+    const snow = m.stage === "pass" && !m.mixed ? ["Complete", "Every object exists with rows; reads only Snowflake"]
+      : m.mixed ? ["Partial", "Reads Snowflake and other sources"]
+      : m.stage === "wait" ? ["Empty", "Objects exist but have no rows"]
+      : m.objects === "objects missing" ? ["Missing objects", "Some objects the model needs aren't in Snowflake yet"]
+      : m.stage === "new" ? ["Not checked", "Not converted yet"] : ["Exists", "Objects exist with rows"];
+    const ev = events(m);
+    return `<div class="detail">
+      <div class="sysbox">
+        <span>Snowflake</span><span class="state">${snow[0]}</span><p>${snow[1]}</p>
+        <span>Power BI</span><span class="state">${s.name}</span><p>${m.parity ? `Parity preview ${m.parity} · refreshed ${fmtDT(m.refreshed)}` : "No parity run yet"}</p>
+      </div>
+      <dl class="kv">
+        <dt>Stage</dt><dd>${s.name}</dd>
+        <dt>Users (90 days)</dt><dd>${m.users}</dd>
+        <dt>Structural test</dt><dd>${m.structural}</dd>
+        <dt>Parity</dt><dd>${m.parity ? `preview ${m.parity} equal (preview, cutoffs differ)` : "—"}</dd>
+        <dt>Last refresh</dt><dd>${fmtDT(m.refreshed)}</dd>
+        <dt>Last updated</dt><dd>${fmtDT(m.updated)}</dd>
+        <dt>Likely owner</dt><dd>${esc(m.owner)}</dd>
+      </dl>
+      <div class="right"><p class="dlabel">Work items (${m.work.length})</p>
+      ${m.work.length ? m.work.map(w => `<div class="story"><a href="#" onclick="return false">#${w.id} ${esc(m.name)}</a><span>Assigned to ${esc(w.owner)}</span><small>${w.state} · changed ${fmtDT(w.when)}</small></div>`).join("") : `<p style="margin:0;color:var(--ink-3)">None yet</p>`}
+      ${ev.length ? `<p class="dlabel">What the pipeline says</p><div class="says">${esc(ev[0][3] || ev[0][2].toLowerCase())}</div>
+      <p class="dlabel">Recent pipeline events, Eastern time</p>
+      <div class="events">${ev.map(([d, a, b, note]) => `<time>${fmtDT(d).replace(" EST", "")}</time><div class="tr"><span class="pill">${a}</span>→<span class="pill">${b}</span></div>${note ? `<p>${esc(note)}</p>` : ""}`).join("")}</div>` : ""}</div>
+    </div>`;
+  };
+
+  const render = () => {
+    const list = filtered();
+    $("count").textContent = `Showing ${list.length} of ${models.length} models`;
+    $("grid").innerHTML = list.length ? list.map(m => {
+      const s = stageOf(m.stage), open = st.open.has(m.id);
+      return `<article class="card${open ? " open" : ""}" style="--c:${m.refreshFailed ? "var(--s-fix)" : s.c}">
+        <div class="head" tabindex="0" role="button" aria-expanded="${open}" data-id="${m.id}" title="Click for detail">
+          <h3>${esc(m.name)}</h3><span class="ws">${esc(m.ws)}</span><span class="tier">Tier ${m.tier}</span>
+          <div class="pills">${pills(m)}</div>
+          <div class="meta"><span>Updated ${daysAgo(m.updated)} d ago</span><span>Refreshed ${daysAgo(m.refreshed)} d ago</span></div>
+        </div>${open ? detail(m) : ""}</article>`;
+    }).join("") : `<p class="empty">No models match these filters.</p>`;
+  };
+
+  $("grid").addEventListener("click", e => {
+    const h = e.target.closest(".head"); if (!h) return;
+    const id = +h.dataset.id; st.open.has(id) ? st.open.delete(id) : st.open.add(id); render();
+  });
+  $("grid").addEventListener("keydown", e => {
+    if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("head")) { e.preventDefault(); e.target.click(); const id = e.target.dataset.id; requestAnimationFrame(() => document.querySelector(`.head[data-id="${id}"]`)?.focus()); }
+  });
+
+  ["f-q"].forEach(id => $(id).addEventListener("input", render));
+  ["f-signin", "sort", "reverse", "only-changed"].forEach(id => $(id).addEventListener("change", render));
+  document.querySelectorAll("input[name=win]").forEach(r => r.addEventListener("change", () => { drawChanged(); render(); }));
+  document.querySelectorAll("input[name=size]").forEach(r => r.addEventListener("change", e => $("main").classList.toggle("compact", e.target.value === "compact")));
+  $("showf").addEventListener("change", e => $("app").classList.toggle("nofilters", !e.target.checked));
+  $("reload").addEventListener("click", () => { $("reload").textContent = "Reloaded"; setTimeout(() => $("reload").textContent = "Reload data", 1200); });
+  $("agent").addEventListener("click", () => alert("In the real app this opens a chat with an agent that answers questions about the migration from the pipeline tables. Not part of the mock-up."));
+
+  $("stamp").textContent = fmtDT(LOAD);
+  $("stamp-age").textContent = `${daysAgo(LOAD)} d ago`;
+  drawSummary(); drawChanged(); drawReports(); render();
+})();
+</script>
+</body>
+</html>
