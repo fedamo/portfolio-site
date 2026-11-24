@@ -70,20 +70,13 @@ previous one passed or every difference was explained.
 
 ## Tracking it: a status app with its own agent
 
-The pipeline wrote every check result to tables in Snowflake. I built a Streamlit app on top of them so anyone
-could see where each model stood without asking me.
+The pipeline wrote every check result to tables in Snowflake. I built a Streamlit in Snowflake app on top of them,
+with a card per model, a stage bar and filters, so anyone could see where each model stood. A semantic view over the
+pipeline results defines the stages and checks once, and both the app and a Cortex agent read from it. The agent sits
+in the app as a chat panel for plain-English questions.
 
-- **A progress bar across the top** showing how many models were at each stage, from not converted to deployed.
-- **A card per model** with a colour-coded stage and pills for each check: structural test, Snowflake objects,
-  parity preview and any blocker. Clicking a card opened its details, work items and recent pipeline events.
-- **Filters** by stage, readiness, issue, owner and workspace, plus a view of what changed since the last load.
-
-I also built a semantic view over the pipeline results, so stages, checks and counts were each defined once. The
-app read from it, and so did a Cortex agent I built on the same view. That agent sat in the app as a chat panel,
-so people could ask things like "which models are blocked by empty Snowflake tables?" and get an answer from the
-same definitions the cards used.
-
-[See a mock-up of the tracker](/dashboards/migration-tracker/), with made-up models and data.
+The full story is in [its own write-up](/projects/migration-status-dashboard/), and there's a
+[mock-up of the dashboard](/dashboards/migration-tracker/) with made-up data.
 
 ## Fix it once, roll it out everywhere
 

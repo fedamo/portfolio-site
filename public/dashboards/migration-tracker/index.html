@@ -43,6 +43,7 @@ h1 { font-size: 30px; font-weight: 700; margin: 0 0 4px; }
 .subt { color: var(--ink-3); font-size: 15px; margin: 0; }
 .topright { display: grid; gap: 12px; justify-items: end; }
 .agent { background: #2d6fd0; color: #fff; border: 0; border-radius: 10px; padding: 10px 18px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 6px rgba(33, 86, 184, .3); }
+.stamp.fresh { background: #eef7ee; border-color: #b9dcbc; } .stamp.fresh small, .stamp.fresh em { color: #2e7d32; }
 .stamp { background: #fff8e1; border: 1px solid #f2d58a; border-radius: 6px; padding: 6px 12px; font-size: 13px; }
 .stamp small { display: block; color: #a47610; font-size: 11px; }
 .stamp em { font-style: normal; color: #c48a12; margin-left: 6px; }
@@ -197,7 +198,7 @@ details.exp[open] summary { color: var(--primary); }
       </div>
       <div class="topright">
         <button class="agent" id="agent">› Ask migration agent</button>
-        <div class="stamp"><small>Pipeline data as of</small><span id="stamp"></span><em id="stamp-age"></em></div>
+        <div class="stamp" id="stampbox" title="Turns amber when the data is more than 2 days old"><small>Pipeline data as of</small><span id="stamp"></span><em id="stamp-age"></em></div>
       </div>
     </div>
 
@@ -232,7 +233,7 @@ details.exp[open] summary { color: var(--primary); }
     <details class="exp">
       <summary>How to read the cards</summary>
       <div class="expbody">
-        <p>The colour down the left of each card is its stage, using the same colours as the progress bar. The first pill is what the pipeline is doing with the model right now. The other pills are checks.</p>
+        <p>Built from the pipeline's own stage definitions. The colour down the left of each card is its stage, using the same colours as the progress bar. The first pill is what the pipeline is doing with the model right now. The other pills are checks.</p>
         <div class="keyrow"><span class="pill solid" style="--pc:var(--s-pass)">✓ Structural pass</span> every table, column and measure matches the production model.</div>
         <div class="keyrow"><span class="pill fail">✕ Structural FAIL</span> something in the model's structure differs from production.</div>
         <div class="keyrow"><span class="pill parity">Parity preview 16/24</span> tables whose values match production in a preview run. A preview is a guide only, because the data cut-offs differ.</div>
@@ -244,7 +245,7 @@ details.exp[open] summary { color: var(--primary); }
 
     <details class="exp">
       <summary>Reports from the pipeline views</summary>
-      <div class="expbody" id="reports"></div>
+      <div class="expbody"><label style="display:grid;gap:6px;max-width:360px;margin-bottom:12px">Report<select class="sortsel" id="rep-sel"></select></label><div id="rep-out"></div></div>
     </details>
 
     <div class="controls">
@@ -270,7 +271,7 @@ details.exp[open] summary { color: var(--primary); }
     <p class="count" id="count"></p>
     <div class="grid" id="grid"></div>
 
-    <p class="note">Mock-up of a migration tracker built as a Streamlit app on Snowflake. The app reads a semantic view over the pipeline results, and the migration agent is a Cortex agent built on that view. Every model name, workspace, person and number here is made up. <a href="/projects/semantic-model-migration/">Read about the migration</a>.</p>
+    <p class="note">Mock-up of a migration tracker built as a Streamlit app on Snowflake. The app reads a semantic view over the pipeline results, and the migration agent is a Cortex agent built on that view. Every model name, workspace, person and number here is made up. <a href="/projects/migration-status-dashboard/">Read how the real one was built</a>.</p>
   </main>
 </div>
 
@@ -460,12 +461,43 @@ details.exp[open] summary { color: var(--primary); }
   };
 
   // ---------- reports ----------
+  const REPORTS = {
+    progress: "Progress over time (stacked bar)",
+    issues: "Open issues by type",
+    workspace: "Progress by workspace",
+  };
+  const history = (() => {
+    // weekly snapshots ending at today's counts; earlier weeks had more models not converted
+    const weeks = 8, out = [];
+    for (let w = 0; w < weeks; w++) {
+      const f = w / (weeks - 1), c = {};
+      c.pass = Math.round(COUNTS.pass * f); c.wait = Math.round(COUNTS.wait * Math.min(1, f * 1.4));
+      c.fix = Math.round(COUNTS.fix * Math.min(1, f * 1.2)); c.hold = COUNTS.hold;
+      c.new = models.length - c.pass - c.wait - c.fix - c.hold;
+      out.push({ d: minus(LOAD, (weeks - 1 - w) * 7), c });
+    }
+    return out;
+  })();
   const drawReports = () => {
-    const byIssue = {}; models.forEach(m => m.issues.forEach(i => byIssue[i] = (byIssue[i] || 0) + 1));
-    const byWs = {}; models.forEach(m => { byWs[m.ws] = byWs[m.ws] || [0, 0]; byWs[m.ws][0]++; if (SI[m.stage] <= SI.pass) byWs[m.ws][1]++; });
-    $("reports").innerHTML =
-      `<p><strong>Open issues</strong><br>${Object.entries(byIssue).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${esc(k)}: ${n}`).join("<br>")}</p>` +
-      `<p><strong>By workspace (passed / in scope)</strong><br>${Object.entries(byWs).sort().map(([k, [n, p]]) => `<span style="font-family:var(--mono)">${esc(k)}</span>: ${p} / ${n}`).join("<br>")}</p>`;
+    const sel = $("rep-sel").value, host = $("rep-out");
+    if (sel === "progress") {
+      const W = 640, H = 220, M = { l: 36, b: 24, t: 8 }, bw = (W - M.l) / history.length * 0.7, order = ["pass", "wait", "fix", "new", "hold"];
+      const y = v => M.t + (H - M.t - M.b) * (1 - v / models.length);
+      let g = "";
+      [0, 30, 60, 90].forEach(v => g += `<line x1="${M.l}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${M.l - 6}" y="${y(v) + 4}" font-size="11" text-anchor="end" fill="var(--ink-3)">${v}</text>`);
+      history.forEach((h, i) => {
+        const x = M.l + (W - M.l) / history.length * (i + 0.15); let acc = 0;
+        order.forEach(id => { const n = h.c[id]; if (!n) return; g += `<rect x="${x}" y="${y(acc + n)}" width="${bw}" height="${y(acc) - y(acc + n)}" fill="${stageOf(id).c}"><title>${h.d.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · ${stageOf(id).name}: ${n}</title></rect>`; acc += n; });
+        g += `<text x="${x + bw / 2}" y="${H - 6}" font-size="11" text-anchor="middle" fill="var(--ink-3)">${h.d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</text>`;
+      });
+      host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:auto" role="img" aria-label="Weekly count of models by stage">${g}</svg><p style="margin:4px 0 0;font-size:13px">Models by stage at each weekly load. Hover a block for its count.</p>`;
+    } else if (sel === "issues") {
+      const by = {}; models.forEach(m => m.issues.forEach(i => by[i] = (by[i] || 0) + 1));
+      host.innerHTML = `<table style="border-collapse:collapse;font-size:14px">${Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<tr><td style="padding:3px 18px 3px 0">${esc(k)}</td><td style="text-align:right">${n}</td></tr>`).join("")}</table>`;
+    } else {
+      const by = {}; models.forEach(m => { by[m.ws] = by[m.ws] || [0, 0]; by[m.ws][0]++; if (SI[m.stage] <= SI.pass) by[m.ws][1]++; });
+      host.innerHTML = `<table style="border-collapse:collapse;font-size:14px"><tr><th style="text-align:left;padding:3px 18px 3px 0">Workspace</th><th>Passed / in scope</th></tr>${Object.entries(by).sort().map(([k, [n, q]]) => `<tr><td style="padding:3px 18px 3px 0;font-family:var(--mono)">${esc(k)}</td><td style="text-align:center">${q} / ${n}</td></tr>`).join("")}</table>`;
+    }
   };
 
   // ---------- cards ----------
@@ -502,6 +534,13 @@ details.exp[open] summary { color: var(--primary); }
     return ev;
   };
 
+  const nextStep = m => ({
+    pass: m.mixed ? "Owner decides whether the non-Snowflake sources stay" : "Analyst runs full parity, then business review",
+    wait: "Data engineering loads the empty Snowflake tables",
+    fix: m.refreshFailed ? "Check gateway binding and credentials, then refresh" : "Analyst fixes the structural differences on the model's branch",
+    new: "Pipeline converts the model in a coming batch",
+    hold: "Confirm whether a production model exists to compare against",
+  }[m.stage] || "");
   const detail = m => {
     const s = stageOf(m.stage);
     const snow = m.stage === "pass" && !m.mixed ? ["Complete", "Every object exists with rows; reads only Snowflake"]
@@ -522,7 +561,9 @@ details.exp[open] summary { color: var(--primary); }
         <dt>Parity</dt><dd>${m.parity ? `preview ${m.parity} equal (preview, cutoffs differ)` : "—"}</dd>
         <dt>Last refresh</dt><dd>${fmtDT(m.refreshed)}</dd>
         <dt>Last updated</dt><dd>${fmtDT(m.updated)}</dd>
+        <dt>Issue</dt><dd>${m.issues.length ? esc(m.issues.join(", ")) : "None"}</dd>
         <dt>Likely owner</dt><dd>${esc(m.owner)}</dd>
+        <dt>Next step</dt><dd>${esc(nextStep(m))}</dd>
       </dl>
       <div class="right"><p class="dlabel">Work items (${m.work.length})</p>
       ${m.work.length ? m.work.map(w => `<div class="story"><a href="#" onclick="return false">#${w.id} ${esc(m.name)}</a><span>Assigned to ${esc(w.owner)}</span><small>${w.state} · changed ${fmtDT(w.when)}</small></div>`).join("") : `<p style="margin:0;color:var(--ink-3)">None yet</p>`}
@@ -631,6 +672,9 @@ details.exp[open] summary { color: var(--primary); }
 
   $("stamp").textContent = fmtDT(LOAD);
   $("stamp-age").textContent = `${daysAgo(LOAD)} d ago`;
+  $("stampbox").classList.toggle("fresh", daysAgo(LOAD) <= 2);
+  $("rep-sel").innerHTML = Object.entries(REPORTS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
+  $("rep-sel").addEventListener("change", drawReports);
   drawSummary(); drawChanged(); drawReports(); render();
 })();
 </script>
