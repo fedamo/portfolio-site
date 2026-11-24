@@ -146,6 +146,29 @@ details.exp[open] summary { color: var(--primary); }
   .sysbox { grid-template-columns: 76px 1fr; }
   .sysbox p { grid-column: 1 / -1; }
 }
+
+/* Agent chat panel */
+.chat { position: fixed; top: 0; right: 0; width: min(440px, 100vw); height: 100vh; background: #fff; border-left: 1px solid var(--line); box-shadow: -12px 0 32px rgba(0,0,0,.12); display: grid; grid-template-rows: auto 1fr auto; z-index: 20; transform: translateX(100%); transition: transform .2s ease; }
+.chat.open { transform: none; }
+@media (prefers-reduced-motion: reduce) { .chat { transition: none; } }
+.chat header { padding: 16px 18px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: start; gap: 10px; }
+.chat header b { font-size: 17px; } .chat header small { display: block; color: var(--ink-3); font-size: 13px; }
+.chat .x { border: 0; background: none; font-size: 22px; cursor: pointer; color: var(--ink-2); line-height: 1; }
+.msgs { overflow-y: auto; padding: 16px 18px; display: grid; gap: 12px; align-content: start; }
+.msg { max-width: 92%; padding: 10px 12px; border-radius: 10px; font-size: 15px; line-height: 1.45; }
+.msg.u { justify-self: end; background: #2d6fd0; color: #fff; border-bottom-right-radius: 3px; }
+.msg.a { background: var(--soft); border: 1px solid var(--line); border-bottom-left-radius: 3px; }
+.msg.a ul { margin: 6px 0 0; padding-left: 18px; }
+.msg details { margin-top: 8px; font-size: 13px; }
+.msg details summary { cursor: pointer; color: var(--ink-2); }
+.msg pre { margin: 6px 0 0; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 8px; font-family: var(--mono); font-size: 12px; white-space: pre-wrap; }
+.sugg { display: flex; flex-wrap: wrap; gap: 6px; }
+.sugg button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 10px; font-size: 13px; cursor: pointer; }
+.sugg button:hover { border-color: #2d6fd0; color: #2d6fd0; }
+.chat form { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.chat input { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; outline: none; }
+.chat input:focus { border-color: #2d6fd0; }
+.chat form button { background: #2d6fd0; color: #fff; border: 0; border-radius: 8px; padding: 0 14px; font-weight: 600; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -247,10 +270,15 @@ details.exp[open] summary { color: var(--primary); }
     <p class="count" id="count"></p>
     <div class="grid" id="grid"></div>
 
-    <p class="note">Mock-up of a migration tracker built as a Streamlit app on Snowflake. Every model name, workspace, person and number here is made up. <a href="/projects/semantic-model-migration/">Read about the migration</a>.</p>
+    <p class="note">Mock-up of a migration tracker built as a Streamlit app on Snowflake. The app reads a semantic view over the pipeline results, and the migration agent is a Cortex agent built on that view. Every model name, workspace, person and number here is made up. <a href="/projects/semantic-model-migration/">Read about the migration</a>.</p>
   </main>
 </div>
 
+<aside class="chat" id="chat" aria-label="Migration agent" aria-hidden="true">
+  <header><div><b>Migration agent</b><small>Answers from the semantic view over the pipeline results</small></div><button class="x" id="chat-x" aria-label="Close">×</button></header>
+  <div class="msgs" id="msgs" aria-live="polite"></div>
+  <form id="chat-f"><input id="chat-in" placeholder="Ask about the migration" autocomplete="off" aria-label="Question"><button>Ask</button></form>
+</aside>
 <script>
 (() => {
   // ---------- stages (furthest first) ----------
@@ -532,7 +560,74 @@ details.exp[open] summary { color: var(--primary); }
   document.querySelectorAll("input[name=size]").forEach(r => r.addEventListener("change", e => $("main").classList.toggle("compact", e.target.value === "compact")));
   $("showf").addEventListener("change", e => $("app").classList.toggle("nofilters", !e.target.checked));
   $("reload").addEventListener("click", () => { $("reload").textContent = "Reloaded"; setTimeout(() => $("reload").textContent = "Reload data", 1200); });
-  $("agent").addEventListener("click", () => alert("In the real app this opens a chat with an agent that answers questions about the migration from the pipeline tables. Not part of the mock-up."));
+
+  // ---------- mock agent: answers from the tracker data, showing the query it would send to the semantic view ----------
+  const SUGG = ["How many models have passed the structural test?", "Which models are blocked by empty Snowflake tables?", "What changed in the last 7 days?", "Which workspace is furthest behind?", "Which passed models have the most users?"];
+  const chat = $("chat"), msgs = $("msgs");
+  const say = (who, html) => { const d = document.createElement("div"); d.className = "msg " + who; d.innerHTML = html; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; };
+  const q = sql => `<details><summary>Query against the semantic view</summary><pre>${esc(sql)}</pre></details>`;
+  const li = arr => `<ul>${arr.map(x => `<li>${x}</li>`).join("")}</ul>`;
+  const answer = text => {
+    const t = text.toLowerCase();
+    const wsHit = [...new Set(models.map(m => m.ws))].find(w => t.includes(w));
+    if (/(passed|pass).*(structural)|structural.*pass|how many.*pass/.test(t)) {
+      const ps = models.filter(m => m.stage === "pass");
+      return `${ps.length} of ${models.length} models have passed the structural test. None has a full parity result yet; their parity previews are:` + li(ps.map(m => `${esc(m.name)}: ${m.parity}`)) +
+        q(`SELECT model_name, parity_preview\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.stage\n  METRICS model.parity_preview)\nWHERE stage = 'Passed structural test';`);
+    }
+    if (/empty|blocked|waiting|awaiting/.test(t)) {
+      const w = models.filter(m => m.issues.includes("Snowflake tables are empty"));
+      return `${w.length} models are waiting because their Snowflake tables exist but are empty:` + li(w.map(m => `${esc(m.name)} <span class="ws">${esc(m.ws)}</span>`)) + `They move on automatically once the data load fills those tables.` +
+        q(`SELECT model_name, workspace\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.workspace, issue.issue_label)\nWHERE issue_label = 'Snowflake tables are empty';`);
+    }
+    if (/chang|moved|week|7 days|recent/.test(t)) {
+      return `Over the 7 days before the last load, ${MOVES.length} models changed stage:` + li(MOVES.map(x => `${esc(models[x.id].name)}: ${stageOf(x.from).name} → ${stageOf(x.to).name}`)) + `The last load itself had no stage changes.` +
+        q(`SELECT model_name, from_stage, to_stage, changed_at\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, stage_event.from_stage,\n             stage_event.to_stage, stage_event.changed_at)\nWHERE changed_at >= DATEADD(day, -7, CURRENT_TIMESTAMP());`);
+    }
+    if (/workspace|behind|furthest/.test(t) && !wsHit) {
+      const by = {}; models.forEach(m => { by[m.ws] = by[m.ws] || { n: 0, p: 0 }; by[m.ws].n++; if (SI[m.stage] <= SI.fix) by[m.ws].p++; });
+      const rows = Object.entries(by).map(([w, v]) => [w, v.p / v.n, v]).sort((a, b) => a[1] - b[1]);
+      return `By share of models already in Dev01 or further along:` + li(rows.map(([w, r, v]) => `<span class="ws">${esc(w)}</span>: ${v.p} of ${v.n} (${Math.round(r * 100)}%)`)) + `<span class="ws">${esc(rows[0][0])}</span> is furthest behind.` +
+        q(`SELECT workspace, models_started, models_in_scope,\n       models_started / models_in_scope AS share_started\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.workspace\n  METRICS model.models_started, model.models_in_scope)\nORDER BY share_started;`);
+    }
+    if (wsHit) {
+      const ms = models.filter(m => m.ws === wsHit);
+      return `<span class="ws">${esc(wsHit)}</span> has ${ms.length} models in scope:` + li(STAGES.filter(s => ms.some(m => m.stage === s.id)).map(s => `${s.name}: ${ms.filter(m => m.stage === s.id).length}`)) +
+        q(`SELECT stage, models_in_scope\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.stage\n  METRICS model.models_in_scope)\nWHERE workspace = '${wsHit}';`);
+    }
+    if (/users|most used|priorit/.test(t)) {
+      const ms = models.filter(m => m.stage === "pass").sort((a, b) => b.users - a.users);
+      return `Passed models by users in the last 90 days:` + li(ms.map(m => `${esc(m.name)}: ${m.users}`)) + `${esc(ms[0].name)} reaches the most people, so it's the best candidate to put in front of its business owner first.` +
+        q(`SELECT model_name, users_90d\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.stage\n  METRICS usage.users_90d)\nWHERE stage = 'Passed structural test'\nORDER BY users_90d DESC;`);
+    }
+    const owner = OWNERS.find(o => o !== "Unassigned" && t.includes(o.split(" ")[0].toLowerCase()));
+    if (owner) {
+      const ms = models.filter(m => m.owner === owner);
+      return `${esc(owner)} is the likely owner of ${ms.length} models, ${ms.filter(m => SI[m.stage] <= SI.fix).length} of them already in Dev01 or further along.` +
+        q(`SELECT model_name, stage\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.stage, owner.owner_name)\nWHERE owner_name = '${owner}';`);
+    }
+    return `I can answer questions about stages, blockers, recent changes, workspaces, owners and usage. Try one of these:`;
+  };
+  const ask = text => {
+    if (!text.trim()) return;
+    say("u", esc(text));
+    const a = answer(text);
+    say("a", a);
+    if (a.startsWith("I can answer")) suggest();
+  };
+  const suggest = () => {
+    const d = document.createElement("div"); d.className = "sugg";
+    d.innerHTML = SUGG.map(x => `<button type="button">${esc(x)}</button>`).join("");
+    d.addEventListener("click", e => { const b = e.target.closest("button"); if (b) ask(b.textContent); });
+    msgs.appendChild(d);
+  };
+  say("a", "Ask me about the migration. I answer from the semantic view built on the pipeline results, and you can open the query behind each answer.<br><small style=\"color:var(--ink-3)\">Mock-up: answers come from this page's made-up data.</small>");
+  suggest();
+  const openChat = on => { chat.classList.toggle("open", on); chat.setAttribute("aria-hidden", !on); if (on) $("chat-in").focus(); else $("agent").focus(); };
+  $("agent").addEventListener("click", () => openChat(true));
+  $("chat-x").addEventListener("click", () => openChat(false));
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && chat.classList.contains("open")) openChat(false); });
+  $("chat-f").addEventListener("submit", e => { e.preventDefault(); const v = $("chat-in").value; $("chat-in").value = ""; ask(v); });
 
   $("stamp").textContent = fmtDT(LOAD);
   $("stamp-age").textContent = `${daysAgo(LOAD)} d ago`;

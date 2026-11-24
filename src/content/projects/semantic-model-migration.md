@@ -3,7 +3,7 @@ title: "Moving BI models to a new warehouse without anyone noticing"
 summary: "I moved production Power BI models from Synapse to Snowflake's gold layer. Because the models lived as code in Git, a fix found in one could be rolled out to all of them."
 pubDate: 2026-11-21
 status: live
-stack: [Power BI (PBIP/TMDL), Snowflake, Azure Synapse, Git, Azure DevOps, Python, REST APIs, Claude Code]
+stack: [Power BI (PBIP/TMDL), Snowflake, Azure Synapse, Git, Azure DevOps, Python, REST APIs, Streamlit, Snowflake semantic views, Cortex agents, Claude Code]
 featured: true
 sketch: layers
 skills: ["Data migration", "Metrics-as-code", "Fix once, apply at scale", "CI/CD", "Automated parity testing"]
@@ -67,6 +67,23 @@ previous one passed or every difference was explained.
 | Data types | Each column's type against prod | Type mismatches that change sorting, joins or DAX results |
 | Model comparison | Every table, column, measure and value profile in the published model against prod | Differences a user would see in a report |
 | Row-level security | Who can see what, for each role | Users seeing more or less than before |
+
+## Tracking it: a status app with its own agent
+
+The pipeline wrote every check result to tables in Snowflake. I built a Streamlit app on top of them so anyone
+could see where each model stood without asking me.
+
+- **A progress bar across the top** showing how many models were at each stage, from not converted to deployed.
+- **A card per model** with a colour-coded stage and pills for each check: structural test, Snowflake objects,
+  parity preview and any blocker. Clicking a card opened its details, work items and recent pipeline events.
+- **Filters** by stage, readiness, issue, owner and workspace, plus a view of what changed since the last load.
+
+I also built a semantic view over the pipeline results, so stages, checks and counts were each defined once. The
+app read from it, and so did a Cortex agent I built on the same view. That agent sat in the app as a chat panel,
+so people could ask things like "which models are blocked by empty Snowflake tables?" and get an answer from the
+same definitions the cards used.
+
+[See a mock-up of the tracker](/dashboards/migration-tracker/), with made-up models and data.
 
 ## Fix it once, roll it out everywhere
 
