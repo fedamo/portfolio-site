@@ -1,6 +1,6 @@
 ---
 title: "Moving BI models to a new warehouse without anyone noticing"
-summary: "I moved production Power BI models from Synapse to Snowflake's gold layer. Same numbers, same security, same reports. Because the models lived as code in Git, a fix found in one could be rolled out to all of them."
+summary: "I moved production Power BI models from Synapse to Snowflake's gold layer. Because the models lived as code in Git, a fix found in one could be rolled out to all of them."
 pubDate: 2026-11-21
 status: live
 stack: [Power BI (PBIP/TMDL), Snowflake, Azure Synapse, Git, Azure DevOps, Python, REST APIs, Claude Code]
@@ -19,8 +19,7 @@ and got them fixed upstream. The scripts, checks and docs can be reused for the 
 ## What we were trying to do
 
 We had a set of production Power BI models reading from a legacy Synapse warehouse. They needed to move to
-Snowflake and read from its gold layer instead. The one rule was that users shouldn't notice. Same numbers,
-same row-level security, same report behaviour.
+Snowflake and read from its gold layer instead. The one rule was that users shouldn't notice.
 
 While we were in there, I also wanted the models to stop hard-coding their connections, so the same model
 could be promoted from dev to test to prod through CI/CD.
@@ -33,8 +32,8 @@ Every model went through the same nine steps, in three stages.
 
 1. **Map the sources.** List every query in the model, find its gold-layer equivalent, and flag anything
    with no match.
-2. **Work on a branch.** Each model got its own Git branch. If prod changed during the work, I merged that
-   back in so nothing got lost.
+2. **Work on a branch.** Each model got its own Git branch. An automatic check in the pipeline flagged any
+   change to prod during the work, so it was merged back in and nothing got lost.
 3. **Rewrite the queries.** Swap the old sources for native Snowflake queries, with server, warehouse and
    database as parameters. That's what lets one model run in every environment.
 
