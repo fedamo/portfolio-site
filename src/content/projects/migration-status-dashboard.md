@@ -16,6 +16,7 @@ We're moving about 100 Power BI semantic models from Azure Synapse to Snowflake.
 pipeline that takes each model in turn. It converts the queries to Snowflake, publishes a copy to a dev workspace,
 binds the connections and refreshes it, then tests it against production: structure first, then whether the numbers
 match. Every step writes the model's state into Snowflake tables.
+The pipeline is my colleague's work. My part is the dashboard and agent described here.
 
 The trouble was that the status of the migration lived in many places. The pipeline's tables said what had been
 tested. Azure DevOps held the stories, who they were assigned to and how far along they were. Getting a full picture

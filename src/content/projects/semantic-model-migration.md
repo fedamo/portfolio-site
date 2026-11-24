@@ -32,8 +32,8 @@ Every model went through the same nine steps, in three stages.
 
 1. Map the sources. List every query in the model, find its gold-layer equivalent, and flag anything
    with no match.
-2. Work on a branch. Each model got its own Git branch. An automatic check in the pipeline flagged any
-   change to prod during the work, so it was merged back in and nothing got lost.
+2. Work on a branch. Each model got its own Git branch. An automatic check in a colleague's pipeline
+   flagged any change to prod during the work, so it was merged back in and nothing got lost.
 3. Rewrite the queries. Swap the old sources for native Snowflake queries, with server, warehouse and
    database as parameters. That's what lets one model run in every environment.
 
@@ -70,7 +70,7 @@ previous one passed or every difference was explained.
 
 ## Tracking it: a status app with its own agent
 
-The pipeline wrote every check result to tables in Snowflake. I built a Streamlit in Snowflake app on top of them,
+A colleague's automated pipeline wrote every check result to tables in Snowflake. I built a Streamlit in Snowflake app on top of them,
 with a card per model, a stage bar and filters, so anyone could see where each model stood. A semantic view over the
 pipeline results defines the stages and checks once, and both the app and a Cortex agent read from it. The agent sits
 in the app as a chat panel for plain-English questions.
