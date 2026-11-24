@@ -1,6 +1,6 @@
 ---
 title: "Moving BI models to a new warehouse without anyone noticing"
-summary: "I moved production Power BI models from Synapse to Snowflake's gold layer. Because the models lived as code in Git, a fix found in one could be rolled out to all of them."
+summary: "I worked on moving production Power BI models from Synapse to Snowflake's gold layer, alongside a colleague's automated pipeline. Because the models lived as code in Git, a fix found in one could be rolled out to all of them."
 pubDate: 2026-11-21
 status: live
 stack: [Power BI (PBIP/TMDL), Snowflake, Azure Synapse, Git, Azure DevOps, Python, REST APIs, Streamlit, Snowflake semantic views, Cortex agents, Claude Code]
@@ -20,6 +20,10 @@ and got them fixed upstream. The scripts, checks and docs can be reused for the 
 
 We had a set of production Power BI models reading from a legacy Synapse warehouse. They needed to move to
 Snowflake and read from its gold layer instead. The one rule was that users shouldn't notice.
+
+A colleague built the automated pipeline that converts, publishes and tests the models. I worked on the models
+themselves: running scripts and checks locally, fixing what didn't match, and taking each one through the steps
+below.
 
 While we were in there, I also wanted the models to stop hard-coding their connections, so the same model
 could be promoted from dev to test to prod through CI/CD.
