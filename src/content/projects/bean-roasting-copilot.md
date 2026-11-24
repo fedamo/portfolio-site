@@ -32,19 +32,19 @@ still the one making the changes. It just means I can think about the decision i
 
 ## What I built
 
-- **A Bluetooth bridge.** An open-source bridge connects the roaster to my Mac and exposes it over a local
+- A Bluetooth bridge. An open-source bridge connects the roaster to my Mac and exposes it over a local
   WebSocket. I hardened it: it reconnects when Bluetooth drops, holds stop commands until the link is back,
   and works around the roaster's built-in 10-minute cutoff by resuming automatically.
-- **A handful of command-line tools,** built with Claude Code on the Claude API:
+- A handful of command-line tools, built with Claude Code on the Claude API:
   - `roast-plan` writes a pre-roast plan from the profile, my notes and past roasts.
   - `roast-copilot-live` gives advice during the roast and logs everything.
   - `roast-cmd` sends heat, fan and drum commands, with safety checks.
   - `watch` reads alerts out loud.
   - `roast-cup` records tasting scores.
   - `roast-review` looks at a finished roast and suggests what to change.
-- **Plain files for the data.** A YAML profile, reference notes, and one JSON file per roast: temperature every
+- Plain files for the data. A YAML profile, reference notes, and one JSON file per roast: temperature every
   5 seconds, crack and drop times, every heat change, the advice I got and my notes.
-- **Artisan** (the open-source roasting app) is still there if I want a live graph.
+- Artisan (the open-source roasting app) is still there if I want a live graph.
 
 ## How it fits together
 
@@ -53,11 +53,11 @@ and every one goes through a safety check first. There are 57 tests on the new c
 
 ## A few decisions I'd make again
 
-- **The AI suggests; code decides.** Advice is logged next to the real measurements, and nothing reaches a hot
+- The AI suggests; code decides. Advice is logged next to the real measurements, and nothing reaches a hot
   roaster without passing a plain, deterministic check.
-- **Measure things the same way every time.** Development time always runs from first crack to drop, so one roast
+- Measure things the same way every time. Development time always runs from first crack to drop, so one roast
   can be compared with the next.
-- **Fast answers when it matters.** Planning uses more reasoning. Live advice skips it, so the answer arrives while
+- Fast answers when it matters. Planning uses more reasoning. Live advice skips it, so the answer arrives while
   it's still useful.
 
 ## So far

@@ -31,7 +31,7 @@ professional services team.
 
 [Try a mock-up of the dashboard](/dashboards/migration-tracker/). The models, people and numbers in it are made up.
 
-## Spec first, then a mock-up, then the real thing
+## How it was planned
 
 I started with a one-page spec: what the dashboard is for, who uses it, and which numbers matter most. Then I built an
 HTML mock-up on dummy data so people could react to something real before any of it touched Snowflake. Once real data
@@ -42,27 +42,27 @@ The app only reads. The pipeline owns and loads the data, so the dashboard can n
 
 ## What's on the page
 
-- **A freshness stamp** that turns amber when the data is more than two days old.
-- **A stage bar** across the top showing how many models sit at each stage.
-- **A "What changed" panel** covering the last load, 24 hours or 7 days.
-- **A grid of cards**, one per model, tinted by stage, with a few tags showing where it is and what's in its way. Clicking a card opens its Snowflake
+- A freshness stamp that turns amber when the data is more than two days old.
+- A stage bar across the top showing how many models sit at each stage.
+- A "What changed" panel covering the last load, 24 hours or 7 days.
+- A grid of cards, one per model, tinted by stage, with a few tags showing where it is and what's in its way. Clicking a card opens its Snowflake
   and Power BI status, the issue, the owner, the next step and its linked Azure DevOps work items.
-- **Filters** in a side pane that can be hidden, and that survive reruns.
-- **A "How to read the cards" guide** built from the pipeline's own stage definitions, so it can't fall out of date.
-- **A reports menu** with 17 SQL reports, including a stacked-bar progress chart.
-- **The chat agent** in a collapsible side panel.
+- Filters in a side pane that can be hidden, and that survive reruns.
+- A "How to read the cards" guide built from the pipeline's own stage definitions, so it can't fall out of date.
+- A reports menu with 17 SQL reports, including a stacked-bar progress chart.
+- The chat agent in a collapsible side panel.
 
 ## One semantic view behind the page and the agent
 
 The Snowflake objects are generated from code by a build script. Nothing is written by hand.
 
-The centre of it is a **semantic view** over six pipeline views and tables: models, test failures, blocking objects,
+The centre of it is a semantic view over six pipeline views and tables: models, test failures, blocking objects,
 daily progress, state-change events and the load log. It defines the two relationships (test failures to models,
 events to models), computed flags such as "has passed" and "real failure or just a sample run", and the dimensions and metrics,
 each with synonyms and a comment. The 17 report queries live in it too, each tagged with the question it answers, so
 they double as verified queries for the agent.
 
-The **Cortex agent** has one tool: Cortex Analyst, turning questions into SQL over that semantic view. Its instructions
+The Cortex agent has one tool: Cortex Analyst, turning questions into SQL over that semantic view. Its instructions
 carry the business rules:
 
 - what "passed" means;
@@ -98,21 +98,21 @@ stage directory doesn't refresh itself after a connector upload.
 
 ## How I tested it
 
-- **244 automated tests, all passing,** on canned data with no Snowflake connection: 33 for the data and display rules,
+- 244 automated tests, all passing, on canned data with no Snowflake connection: 33 for the data and display rules,
   43 for the agent and reports, and 168 that run the whole page through Streamlit's test runner. They cover filters
   surviving reruns, the grid layout, the chart spec, time zones across daylight-saving changes, fallbacks for older
   Streamlit versions, and the page still loading when a data source can't be read.
-- **Real-browser checks.** The in-app preview reported the wrong widths, so I measured the layout in headless Edge at
+- Real-browser checks. The in-app preview reported the wrong widths, so I measured the layout in headless Edge at
   four screen widths: equal card heights, no overlapping popovers, aligned detail rows. With every card showing, the
   first paint takes about 2.4 seconds and a rerun about 0.3.
-- **Version checks.** I worked out which Streamlit features exist on each version Snowflake supports, from the release
+- Version checks. I worked out which Streamlit features exist on each version Snowflake supports, from the release
   notes and source code, and built fallbacks: a form when there's no chat input box, a checkbox when there's no toggle.
-- **Live-data checks.** Read-only queries against the live views confirmed every number in the walkthrough deck. That
+- Live-data checks. Read-only queries against the live views confirmed every number in the walkthrough deck. That
   pass corrected several.
-- **An independent review.** A multi-agent review of the change-tracking logic found three bugs. All are fixed and
+- An independent review. A multi-agent review of the change-tracking logic found three bugs. All are fixed and
   covered by tests.
 
-## It earned its keep in triage
+## What it caught in triage
 
 The dashboard traced a stuck model to a target view holding only 2 of its roughly 100 source columns. It also showed
 that the pipeline's status label treated missing columns as renamed ones, which I raised with the pipeline's owner.

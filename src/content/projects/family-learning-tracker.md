@@ -13,35 +13,35 @@ skills: ["AI product design", "Structured LLM outputs", "Human-in-the-loop", "Cl
 ## Why I built it
 
 School curriculum documents spell out what a child should be able to do by the end of the year. Turning that
-into useful practice at home takes time, though. Generic worksheets don't follow what the class is actually
+into useful practice at home takes time, though. Generic worksheets don't follow what the class is
 covering, and it's hard to tell which skills are solid and which still need work.
 
 ## What it does
 
-- **Reads the curriculum.** Upload the school's document (PDF, Word or pasted text) and Claude pulls out every
+- Reads the curriculum. Upload the school's document (PDF, Word or pasted text) and Claude pulls out every
   benchmark, like "can add two-digit numbers with regrouping". It's told to copy each statement as
   written and invent nothing.
-- **Tracks each benchmark** as not started, in progress or achieved.
-- **Writes daily practice.** Every morning a scheduled job writes four questions for each subject that still
+- Tracks each benchmark as not started, in progress or achieved.
+- Writes daily practice. Every morning a scheduled job writes four questions for each subject that still
   has gaps, each tied to a specific benchmark.
-- **Asks questions the way a tutor would.** Maths questions come at the skill from different angles: word problems,
+- Asks questions the way a tutor would. Maths questions come at the skill from different angles: word problems,
   "solve it two ways", "spot the mistake", estimate first. Reading questions come with a short original
   passage aimed at one skill.
-- **Marks the answers.** My kids type their answers in. Claude marks each one, gives a hint and a second try, and
+- Marks the answers. My kids type their answers in. Claude marks each one, gives a hint and a second try, and
   tells me the likely misconception ("added the tens without carrying"). Number answers are double-checked in
   code, and I can override any mark.
-- **Closes the loop.** Misconceptions that haven't been fixed feed into the next day's questions, so practice goes
+- Closes the loop. Misconceptions that haven't been fixed feed into the next day's questions, so practice goes
   straight at where they're stuck.
-- **Keeps a learning journal and a reading log,** so I can see what's been covered and how much reading got done.
+- Keeps a learning journal and a reading log, so I can see what's been covered and how much reading got done.
 
 ## How it's built
 
-- **App:** Next.js and TypeScript, with PostgreSQL through Prisma, hosted on Vercel.
-- **AI:** the Claude API with structured outputs. Every response is checked against a schema before it's saved,
+- App: Next.js and TypeScript, with PostgreSQL through Prisma, hosted on Vercel.
+- AI: the Claude API with structured outputs. Every response is checked against a schema before it's saved,
   so the app only ever stores clean, structured data.
-- **Scheduling:** a Vercel cron job writes each day's questions, and the long tutoring prompt is cached to keep
+- Scheduling: a Vercel cron job writes each day's questions, and the long tutoring prompt is cached to keep
   repeat calls cheap.
-- **Built with Claude Code,** working from specs.
+- Built with Claude Code, working from specs.
 
 ## The bit I like most
 

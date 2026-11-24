@@ -28,30 +28,30 @@ could be promoted from dev to test to prod through CI/CD.
 
 Every model went through the same nine steps, in three stages.
 
-**Prepare**
+### Prepare
 
-1. **Map the sources.** List every query in the model, find its gold-layer equivalent, and flag anything
+1. Map the sources. List every query in the model, find its gold-layer equivalent, and flag anything
    with no match.
-2. **Work on a branch.** Each model got its own Git branch. An automatic check in the pipeline flagged any
+2. Work on a branch. Each model got its own Git branch. An automatic check in the pipeline flagged any
    change to prod during the work, so it was merged back in and nothing got lost.
-3. **Rewrite the queries.** Swap the old sources for native Snowflake queries, with server, warehouse and
+3. Rewrite the queries. Swap the old sources for native Snowflake queries, with server, warehouse and
    database as parameters. That's what lets one model run in every environment.
 
-**Build and check**
+### Build and check
 
-4. **Match the data types.** Every column comes in as the same type as prod, with an agreed standard for ID
+4. Match the data types. Every column comes in as the same type as prod, with an agreed standard for ID
    columns.
-5. **Fill the gaps.** Where the gold layer was missing something, write the new or extended view with a
+5. Fill the gaps. Where the gold layer was missing something, write the new or extended view with a
    rollback script, test it against the old source, and document it.
-6. **Check the data first.** Compare old and new queries in SQL before looking at any report.
-7. **Publish and compare.** Publish to a dev workspace through the REST APIs, with no manual desktop step,
+6. Check the data first. Compare old and new queries in SQL before looking at any report.
+7. Publish and compare. Publish to a dev workspace through the REST APIs, with no manual desktop step,
    refresh, then compare the whole model against prod.
 
-**Explain and sign off**
+### Explain and sign off
 
-8. **Explain every difference.** Each one gets a label: by design, data timing, already in prod, or still
+8. Explain every difference. Each one gets a label: by design, data timing, already in prod, or still
    open. Recurring ones go in a shared tracker with the root cause.
-9. **Get sign-off.** A short summary for the business owner covering what's done, what's different and why,
+9. Get sign-off. A short summary for the business owner covering what's done, what's different and why,
    and any decisions they need to make.
 
 ## The checks
@@ -78,7 +78,7 @@ in the app as a chat panel for plain-English questions.
 The full story is in [its own write-up](/projects/migration-status-dashboard/), and there's a
 [mock-up of the dashboard](/dashboards/migration-tracker/) with made-up data.
 
-## Fix it once, roll it out everywhere
+## Fixing once and rolling out to every model
 
 Every model was saved in Power BI's text-based project format (PBIP/TMDL), so every model was a set of text
 files in Git.
@@ -96,11 +96,11 @@ to rediscover it. Each model made the next one quicker.
 
 ## Finding problems that were already in prod
 
-Comparing every table, column and value against production tests production too. The checks turned up issues
-that were already sitting there:
+Because every table, column and value was compared with production, the checks also turned up issues that
+were already in production:
 
-- **Duplicate values** in keys that should have been unique, which were quietly breaking refreshes.
-- **Differences in DDL and database logic** between the old warehouse and the new one. Table definitions and
+- Duplicate values in keys that should have been unique, which were breaking refreshes without an obvious error.
+- Differences in DDL and database logic between the old warehouse and the new one. Table definitions and
   view logic didn't line up, so the same query could return different results.
 
 For each one I raised it with the engineering team, with the evidence and a proposed fix, kept it separate from
@@ -109,11 +109,11 @@ production data as well as migrated models.
 
 ## What made it tricky
 
-- **Some models stayed mixed-source** on purpose, with a few tables still on other SQL databases. I documented
+- Some models stayed mixed-source on purpose, with a few tables still on other SQL databases. I documented
   those so they'd be handled properly when promoted.
-- **The databases were renamed mid-project.** Every model's parameters and branches had to be updated, and the
+- The databases were renamed mid-project. Every model's parameters and branches had to be updated, and the
   rename caused a misleading gateway error that took some digging to trace.
-- **Row-level security needed its own check.** Matching row counts doesn't prove that each person sees the same
+- Row-level security needed its own check. Matching row counts doesn't prove that each person sees the same
   rows, so I tested each role separately.
 
 ## How I used AI

@@ -10,18 +10,18 @@ sketch: worksheet
 
 I built a small web app for my family that turns a school curriculum into daily practice questions.
 It worked, but it had a blind spot any human tutor would notice straight away: it could tell
-whether an answer was right, but not *why* it was wrong. This post is about closing that gap.
+whether an answer was right, but not *why* it was wrong.
 
 ## Version 1: curriculum in, questions out
 
 The first version did three things:
 
-- **Read the curriculum.** You upload the school's curriculum document and Claude pulls out every
+- Read the curriculum. You upload the school's curriculum document and Claude pulls out every
   benchmark statement, such as "can add two-digit numbers with regrouping". Each one is tracked as not
   started, in progress or achieved.
-- **Wrote daily practice.** Every morning it generates a short set of questions per subject, each tied
+- Wrote daily practice. Every morning it generates a short set of questions per subject, each tied
   to a benchmark the child hasn't mastered yet.
-- **Wrote them like a tutor.** Word problems, "solve it two ways", "spot the mistake in this other
+- Wrote them like a tutor. Word problems, "solve it two ways", "spot the mistake in this other
   student's working", and short original reading passages with a question that needs one specific
   skill, instead of a page of plain sums.
 
@@ -41,16 +41,16 @@ into what it generated next.
 
 Now the child types the answer into the app, and four things happen.
 
-1. **The answer is marked.** Claude compares it with the expected answer and the benchmark, and
-   returns a verdict (correct, partly right or not yet) using a fixed, validated format rather than
-   free text. It marks understanding and ignores spelling and wording.
-2. **The child gets a hint first.** A short, encouraging message plus one hint that points
+1. The answer is marked. Claude compares it with the expected answer and the benchmark, and
+   returns a verdict (correct, partly right or not yet) in a fixed format that's
+   checked before it's saved. It marks understanding and ignores spelling and wording.
+2. The child gets a hint first. A short, encouraging message plus one hint that points
    at the misunderstanding without giving the answer away, then one more try. The full worked answer
    only appears after that.
-3. **The parent sees the likely misconception.** For example: *"Added the tens without carrying the
+3. The parent sees the likely misconception. For example: *"Added the tens without carrying the
    extra ten from the ones column."* It shows on the question and in a "what they're getting stuck
    on" list in the learning journal.
-4. **Tomorrow adapts.** Unresolved misconceptions from the last two weeks are passed to the question
+4. Tomorrow adapts. Unresolved misconceptions from the last two weeks are passed to the question
    generator, which writes at least one fresh question per subject that exercises the misunderstood
    idea from a new angle, without telling the child they got it wrong before.
 
@@ -59,14 +59,14 @@ Now the child types the answer into the app, and four things happen.
 A marking tool that's confidently wrong is worse than no marking tool, especially for a child.
 A few deliberate choices:
 
-- **Code checks the numbers.** For questions with a numeric answer, the model reads the expected
+- Code checks the numbers. For questions with a numeric answer, the model reads the expected
   number and the child's number, but the comparison is plain arithmetic in code. If they don't match,
   the answer can't be marked correct, whatever the model said.
-- **Parents always win.** Any marking can be overridden with one tap, and the app records whether a
+- Parents always win. Any marking can be overridden with one tap, and the app records whether a
   result came from the AI or a parent. That gives me a running count of how often the AI misjudges.
-- **The child's answer is treated as data.** It's wrapped and labelled in the prompt, so whatever a
+- The child's answer is treated as data. It's wrapped and labelled in the prompt, so whatever a
   child types gets marked and is never followed as an instruction.
-- **Family data stays private.** The app is password-protected and built for one family. Nothing on
+- Family data stays private. The app is password-protected and built for one family. Nothing on
   this page comes from real answers.
 
 ## Why this pattern interests me
@@ -84,6 +84,6 @@ say.
 
 The marking has only been tested with made-up answers so far. Next comes real use: I'll
 write up how fair the marking feels, how often I override it, and whether the targeted questions
-actually help, after a few weeks of homework.
+help, after a few weeks of homework.
 
 More about the build on the [project page](/projects/family-learning-tracker/).

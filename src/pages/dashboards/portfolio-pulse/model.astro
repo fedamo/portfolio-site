@@ -62,8 +62,8 @@ const edges = [
     </figure>
 
     <div class="prose">
-      <h2>Three layers, one set of words</h2>
-      <p>The ontology describes the business in its own terms: a <strong>policy</strong> covers a <strong>product</strong>, a <strong>claim</strong> is made under a policy, and <strong>loss ratio</strong> is claims paid divided by earned premium. Each term carries a plain-English description and the other names people use for it, such as "LOB" for product or "LR" for loss ratio.</p>
+      <h2>How the three layers fit together</h2>
+      <p>The ontology describes the business in its own terms: a policy covers a product, a claim is made under a policy, and loss ratio is claims paid divided by earned premium. Each term carries a plain-English description and the other names people use for it, such as "LOB" for product or "LR" for loss ratio.</p>
       <p>Each term also carries a small annotation saying where it lives in the warehouse: which table, which key, which column. That's the only link between the business layer and the physical one.</p>
       <p>The semantic view is the third layer. It's what dashboards, notebooks and AI tools query, and it's generated from the ontology by a script, so it can't drift from the definitions.</p>
 
@@ -93,7 +93,7 @@ python derive_semantic_view.py insurance.ttl &gt; portfolio_pulse_semantic_view.
       <p>Written in Turtle, a standard format for ontologies. Business terms use the <code>ins:</code> prefix and the warehouse annotations use <code>sv:</code>.</p>
       <details class="onto-src"><summary>Show insurance.ttl</summary><pre><code>{ttl}</code></pre></details>
 
-      <h2>Why bother</h2>
+      <h2>Why define it this way</h2>
       <p>Adding a metric or a synonym is one edit to the ontology. The view, the dashboard's definition cards and an AI agent's vocabulary all follow from that edit. That's the same "define it once" idea as the rest of this site, one level further up.</p>
       <p class="muted">This is a sample on synthetic data. Check the generated SQL against Snowflake's current CREATE SEMANTIC VIEW documentation before running it.</p>
     </div>
