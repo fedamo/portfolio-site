@@ -1,6 +1,6 @@
 ---
 title: "A status dashboard with its own agent for a 100-model migration"
-summary: "A Streamlit in Snowflake app that shows where every Power BI model stands in a warehouse migration, what's blocking it and who acts next, with a Cortex agent that answers questions from the same semantic view."
+summary: "Migration status was spread across several places. This Streamlit in Snowflake app brings it into one: pipeline results and Azure DevOps progress for every model, with a Cortex agent that answers questions from the same semantic view."
 pubDate: 2026-11-24
 status: live
 stack: [Streamlit in Snowflake, Snowflake semantic views, Cortex Agents, Cortex Analyst, Python, SQL, Azure DevOps]
@@ -17,11 +17,16 @@ pipeline that takes each model in turn. It converts the queries to Snowflake, pu
 binds the connections and refreshes it, then tests it against production: structure first, then whether the numbers
 match. Every step writes the model's state into Snowflake tables.
 
-Those tables held the answers, but nobody could read them at a glance. I built the dashboard that turns them into one
-page: where each model stands, what's blocking it, and who acts next. It also has a chat agent for plain-English
-questions about the migration.
+The trouble was that the status of the migration lived in many places. The pipeline's tables said what had been
+tested. Azure DevOps held the stories, who they were assigned to and how far along they were. Getting a full picture
+of any one model meant checking several of them and piecing it together.
 
-The team uses it for triage. I've walked colleagues through it, and it was part of a review with Snowflake's
+I built one Streamlit app that brings it all into a single place. Each model shows its pipeline status alongside its
+Azure DevOps story and progress: where it stands, what's blocking it, and who acts next. It also has a chat agent for
+plain-English questions about the migration.
+
+Having it in one place made the work much easier to follow. The team lead uses it to monitor progress and to give
+leadership updates. The team uses it for triage. I've walked colleagues through it, and it was part of a review with Snowflake's
 professional services team.
 
 [Try a mock-up of the dashboard](/dashboards/migration-tracker/). The models, people and numbers in it are made up.
@@ -76,7 +81,11 @@ the app sends the conversation history with every call, and shows the streamed r
 That helper only exists in Streamlit's warehouse runtime. The newer container runtime doesn't have it, so the app
 runs on the warehouse runtime.
 
-## Five files and a careful deploy
+## Built in code, so it keeps improving
+
+Because the app is built entirely in code, improving it is routine. Each change is made in the Python files, tested,
+and deployed by script, so the app kept getting better as people used it without anyone rebuilding anything by hand.
+The list of changes [further down](#what-changed-as-people-used-it) all shipped that way.
 
 The app is five Python files, deployed together: the page itself, data loading, display rules, the 17 reports, and the
 agent call. Data loading runs one query per view, using the app's own session inside Snowflake and single sign-on when
