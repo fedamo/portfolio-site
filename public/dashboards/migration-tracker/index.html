@@ -38,6 +38,8 @@ input[type=checkbox], input[type=radio] { accent-color: var(--primary); width: 1
 
 /* Main */
 main { padding: 32px 40px 60px; min-width: 0; }
+.mock { margin: 0 0 22px; padding: 10px 14px; background: #eef3fb; border: 1px solid #c9d7f0; border-radius: 8px; font-size: 14px; color: #263a5e; }
+.mock a { color: #1f4fa3; }
 .top { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
 h1 { font-size: 30px; font-weight: 700; margin: 0 0 4px; }
 .subt { color: var(--ink-3); font-size: 15px; margin: 0; }
@@ -188,10 +190,11 @@ details.exp[open] summary { color: #c81e1e; }
   </aside>
 
   <main id="main">
+    <p class="mock" role="note"><b>Mock-up with made-up data.</b> A replica of a real migration tracker, rebuilt to show how it works. Every model, workspace, person and number is invented. <a href="/projects/migration-status-dashboard/">How the real one was built</a></p>
     <div class="top">
       <div>
         <h1>Power BI migration status</h1>
-        <p class="subt">90 in-scope models · Synapse to Snowflake · non-production data</p>
+        <p class="subt">90 in-scope models · Synapse to Snowflake · made-up sample data</p>
       </div>
       <div class="topright">
         <button class="agent" id="agent">› Ask migration agent</button>
