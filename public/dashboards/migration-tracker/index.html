@@ -94,7 +94,7 @@ details.exp[open] summary { color: #c81e1e; }
 .card .head { padding: 12px 14px 10px; cursor: pointer; display: grid; gap: 6px; position: relative; }
 .card .head:hover { background: color-mix(in srgb, var(--c) 6%, transparent); }
 .card .head:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; border-radius: 8px; }
-.card h3 { margin: 0; font-size: 17px; font-weight: 700; padding-right: 64px; }
+.card h3 { margin: 0; font-size: 17px; font-weight: 700; padding-right: 84px; }
 .ws { font-family: var(--mono); font-size: 13px; color: var(--ink-3); }
 .tier { position: absolute; top: 12px; right: 14px; border: 1px solid var(--ink-3); color: var(--ink-2); border-radius: 999px; font-size: 12px; padding: 0 8px; }
 .pills { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -110,7 +110,7 @@ details.exp[open] summary { color: #c81e1e; }
 .detail { border-top: 1px solid var(--line); padding: 14px 16px 16px; font-size: 14px; display: grid; gap: 12px; background: #fff; border-radius: 0 0 10px 10px; }
 .card.open { grid-column: 1 / -1; }
 .detail { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; }
-.detail > .sysbox, .detail > .kv { grid-column: 1; }
+.detail > .kv { grid-column: 1; }
 .detail > .right { grid-column: 2; grid-row: 1 / span 2; display: grid; gap: 12px; align-content: start; }
 .sysbox { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; grid-template-columns: 82px minmax(120px, auto) minmax(0, 1fr); gap: 8px 12px; align-items: center; }
 .sysbox .state { border: 1.25px solid var(--ink-3); border-radius: 999px; padding: 1px 10px; font-size: 13px; justify-self: start; }
@@ -180,11 +180,11 @@ details.exp[open] summary { color: #c81e1e; }
       <h2>Filters</h2>
       <div class="fld"><label for="f-q">Search</label><input type="search" id="f-q" placeholder="Model, workspace or text"></div>
       <div class="fld"><label for="f-stage">Stage</label><select id="f-stage"></select></div>
-      <div class="fld"><label for="f-pipe">Pipeline state</label><select id="f-pipe"></select></div>
-      <div class="fld"><label for="f-ready">Readiness</label><select id="f-ready"></select></div>
-      <div class="fld"><label for="f-tier">Conversion tier</label><select id="f-tier"></select></div>
+      <div class="fld"><label for="f-pipe">Current step</label><select id="f-pipe"></select></div>
+      <div class="fld"><label for="f-ready">Snowflake tables</label><select id="f-ready"></select></div>
+      <div class="fld"><label for="f-tier">Complexity</label><select id="f-tier"></select></div>
       <div class="fld"><label for="f-issue">Issue</label><select id="f-issue"></select></div>
-      <div class="fld"><label for="f-owner">Likely owner</label><select id="f-owner"></select></div>
+      <div class="fld"><label for="f-owner">Owner</label><select id="f-owner"></select></div>
       <div class="fld"><label for="f-ws">Workspace</label><select id="f-ws"></select></div>
       <label class="chk"><input type="checkbox" id="f-signin"> <span id="signin-lbl">Needs an owner sign-in</span></label>
     </div>
@@ -233,13 +233,11 @@ details.exp[open] summary { color: #c81e1e; }
     <details class="exp">
       <summary>How to read the cards</summary>
       <div class="expbody">
-        <p>Built from the pipeline's own stage definitions. The colour down the left of each card is its stage, using the same colours as the progress bar. The first pill is what the pipeline is doing with the model right now. The other pills are checks.</p>
-        <div class="keyrow"><span class="pill solid" style="--pc:var(--s-pass)">✓ Structural pass</span> every table, column and measure matches the production model.</div>
-        <div class="keyrow"><span class="pill fail">✕ Structural FAIL</span> something in the model's structure differs from production.</div>
-        <div class="keyrow"><span class="pill parity">Parity preview 16/24</span> tables whose values match production in a preview run. A preview is a guide only, because the data cut-offs differ.</div>
-        <div class="keyrow"><span class="pill">READY</span> <span class="pill">OBJECTS EXIST</span> <span class="pill">objects missing</span> whether the Snowflake objects the model needs exist.</div>
-        <div class="keyrow"><span class="pill dash">Snowflake tables are empty</span> dashed pills flag a blocker to look at.</div>
-        <p>Click a card for its details, work items and recent pipeline events.</p>
+        <p>The colour down the left of each card shows where the model is, using the same colours as the bar above. Each card has up to three tags:</p>
+        <div class="keyrow"><span class="pill solid" style="--pc:var(--s-pass)">✓ Structure matches</span> where the model is now.</div>
+        <div class="keyrow"><span class="pill parity">16 of 24 tables match</span> how many tables give the same numbers as the live model in a sample run.</div>
+        <div class="keyrow"><span class="pill dash">No data in tables yet</span> the main thing in the way, if there is one.</div>
+        <p>Click a card to see its details, task and history.</p>
       </div>
     </details>
 
@@ -255,7 +253,7 @@ details.exp[open] summary { color: #c81e1e; }
           <option value="users">Users (90 days)</option>
           <option value="updated">Recently updated</option>
           <option value="name">Model name</option>
-          <option value="parity">Parity preview (best first)</option>
+          <option value="parity">Numbers matching (best first)</option>
         </select>
       </div>
       <label class="chk"><input type="checkbox" id="reverse"> Reverse</label>
@@ -284,20 +282,20 @@ details.exp[open] summary { color: #c81e1e; }
 (() => {
   // ---------- stages (furthest first) ----------
   const STAGES = [
-    { id: "deployed", name: "Deployed", short: "DEPLOYED", c: "var(--s-deployed)" },
-    { id: "review", name: "In business review", short: "IN REVIEW", c: "var(--s-review)" },
-    { id: "ready", name: "Ready for business review", short: "READY FOR REVIEW", c: "var(--s-ready)" },
-    { id: "pass", name: "Passed structural test", short: "✓ Structural pass", c: "var(--s-pass)" },
-    { id: "wait", name: "Waiting on Snowflake data", short: "◔ Awaiting data", c: "var(--s-wait)" },
-    { id: "fix", name: "In Dev01, being fixed", short: "◔ Structural fail", c: "var(--s-fix)" },
-    { id: "new", name: "Not converted yet", short: "Not converted", c: "var(--s-new)" },
-    { id: "hold", name: "On hold or no Prod pair", short: "On hold", c: "var(--s-hold)" },
+    { id: "deployed", name: "Released", short: "Released", c: "var(--s-deployed)" },
+    { id: "review", name: "With the business", short: "With business", c: "var(--s-review)" },
+    { id: "ready", name: "Ready for the business", short: "Ready to hand over", c: "var(--s-ready)" },
+    { id: "pass", name: "Structure matches", short: "✓ Structure matches", c: "var(--s-pass)" },
+    { id: "wait", name: "Waiting for data", short: "Waiting for data", c: "var(--s-wait)" },
+    { id: "fix", name: "Being fixed", short: "Needs fixes", c: "var(--s-fix)" },
+    { id: "new", name: "Not started", short: "Not started", c: "var(--s-new)" },
+    { id: "hold", name: "Paused", short: "Paused", c: "var(--s-hold)" },
   ];
   const SI = Object.fromEntries(STAGES.map((s, i) => [s.id, i]));
   const COUNTS = { deployed: 0, review: 0, ready: 0, pass: 4, wait: 6, fix: 16, new: 63, hold: 1 };
   const GROUPS = [
     { label: "Passed testing", ids: ["deployed", "review", "ready", "pass"] },
-    { label: "In Dev01", ids: ["wait", "fix"] },
+    { label: "In progress", ids: ["wait", "fix"] },
     { label: "Not started", ids: ["new", "hold"] },
   ];
 
@@ -345,17 +343,17 @@ details.exp[open] summary { color: #c81e1e; }
     m.refreshed = minus(m.updated, int(0, 2), int(1, 8));
     m.signin = stage === "pass" && i === 2;
     m.mixed = rnd() < .12;
-    if (stage === "pass") { m.pipe = "Structural pass"; m.objects = m.mixed ? "objects missing" : "READY"; m.matched = Math.round(tables * (.6 + rnd() * .35)); m.structural = "PASS"; m.issues = m.mixed ? ["Partly on Snowflake"] : []; }
-    else if (stage === "wait") { m.pipe = "Awaiting data"; m.objects = "OBJECTS EXIST"; m.matched = int(0, 3); m.structural = "FAIL"; m.issues = ["Snowflake tables are empty"]; }
+    if (stage === "pass") { m.pipe = "Structure matches"; m.objects = m.mixed ? "Some tables missing" : "Tables ready"; m.matched = Math.round(tables * (.6 + rnd() * .35)); m.structural = "PASS"; m.issues = m.mixed ? ["Uses other sources too"] : []; }
+    else if (stage === "wait") { m.pipe = "Waiting for data"; m.objects = "Tables empty"; m.matched = int(0, 3); m.structural = "FAIL"; m.issues = ["No data in tables yet"]; }
     else if (stage === "fix") {
       m.refreshFailed = rnd() < .15;
-      m.pipe = m.refreshFailed ? "Refresh failed" : "Structural fail";
-      m.objects = pick(["READY", "OBJECTS EXIST", "objects missing"]); m.matched = Math.round(tables * (.45 + rnd() * .5)); m.structural = "FAIL";
-      m.issues = m.refreshFailed ? ["Refresh did not finish"] : ["Differs from Prod"];
-    } else if (stage === "hold") { m.pipe = "On hold"; m.objects = "—"; m.matched = null; m.structural = "—"; m.issues = ["No Prod pair"]; }
-    else { m.pipe = "Not converted"; m.objects = rnd() < .3 ? "OBJECTS EXIST" : "objects missing"; m.matched = null; m.structural = "—"; m.issues = []; }
+      m.pipe = m.refreshFailed ? "Refresh stopped" : "Needs fixes";
+      m.objects = pick(["Tables ready", "Tables ready", "Some tables missing"]); m.matched = Math.round(tables * (.45 + rnd() * .5)); m.structural = "FAIL";
+      m.issues = m.refreshFailed ? ["Refresh stopped"] : ["Doesn't match live model"];
+    } else if (stage === "hold") { m.pipe = "Paused"; m.objects = "—"; m.matched = null; m.structural = "—"; m.issues = ["Nothing to compare with"]; }
+    else { m.pipe = "Not started"; m.objects = rnd() < .3 ? "Tables ready" : "Some tables missing"; m.matched = null; m.structural = "—"; m.issues = []; }
     m.parity = m.matched == null ? null : `${m.matched}/${tables}`;
-    m.work = stage === "new" ? [] : [{ id: 740000 + int(100, 9999), owner: m.owner, state: stage === "pass" ? "Pending deployment" : "Active", when: minus(m.updated, 1) }];
+    m.work = stage === "new" ? [] : [{ id: 740000 + int(100, 9999), owner: m.owner, state: stage === "pass" ? "Waiting to release" : "In progress", when: minus(m.updated, 1) }];
     return m;
   });
 
@@ -373,8 +371,8 @@ details.exp[open] summary { color: #c81e1e; }
   };
   opts("f-stage", STAGES.map(s => s.name));
   opts("f-pipe", [...new Set(models.map(m => m.pipe))]);
-  opts("f-ready", ["READY", "OBJECTS EXIST", "objects missing"]);
-  opts("f-tier", ["Tier 1", "Tier 2", "Tier 3"]);
+  opts("f-ready", ["Tables ready", "Tables empty", "Some tables missing"]);
+  opts("f-tier", ["Simple", "Medium", "Complex"]);
   opts("f-issue", [...new Set(models.flatMap(m => m.issues))]);
   opts("f-owner", [...new Set(models.map(m => m.owner))].sort());
   opts("f-ws", [...new Set(models.map(m => m.ws))].sort(), "All");
@@ -391,7 +389,7 @@ details.exp[open] summary { color: #c81e1e; }
       (!st.barStage || m.stage === st.barStage) &&
       (!v("f-pipe") || m.pipe === v("f-pipe")) &&
       (!v("f-ready") || m.objects === v("f-ready")) &&
-      (!v("f-tier") || "Tier " + m.tier === v("f-tier")) &&
+      (!v("f-tier") || ["", "Simple", "Medium", "Complex"][m.tier] === v("f-tier")) &&
       (!v("f-issue") || m.issues.includes(v("f-issue"))) &&
       (!v("f-owner") || m.owner === v("f-owner")) &&
       (!v("f-ws") || m.ws === v("f-ws")) &&
@@ -415,7 +413,7 @@ details.exp[open] summary { color: #c81e1e; }
     const total = models.length;
     const passedOrBeyond = models.filter(m => SI[m.stage] <= SI.pass).length;
     $("deployed").textContent = COUNTS.deployed;
-    $("sub2").textContent = `${passedOrBeyond} passed the structural test or are further along · 0 have a parity result`;
+    $("sub2").textContent = `${passedOrBeyond} have a matching structure or are further along · none has had a full numbers check yet`;
     $("bar").innerHTML = STAGES.filter(s => COUNTS[s.id] > 0).map(s =>
       `<button style="flex:${COUNTS[s.id]};background:${s.c}" data-s="${s.id}" class="${st.barStage === s.id ? "on" : ""}" title="${s.name}: ${COUNTS[s.id]}" aria-label="${s.name}: ${COUNTS[s.id]}. Filter cards">${COUNTS[s.id] >= 3 ? COUNTS[s.id] : ""}</button>`).join("");
     let acc = 0;
@@ -502,74 +500,62 @@ details.exp[open] summary { color: #c81e1e; }
 
   // ---------- cards ----------
   const pills = m => {
-    const s = stageOf(m.stage);
-    const p = [];
-    const pc = m.refreshFailed ? "var(--s-fix)" : s.c;
-    p.push(`<span class="pill solid" style="--pc:${pc}">${m.refreshFailed ? "◔ Refresh failed" : s.short}</span>`);
-    if (m.objects && m.objects !== "—") p.push(`<span class="pill">${m.objects}</span>`);
-    if (m.structural === "FAIL" && m.stage !== "fix") p.push(`<span class="pill fail">✕ Structural FAIL</span>`);
-    if (m.stage === "fix" && !m.refreshFailed) p.push(`<span class="pill fail">✕ Structural FAIL</span>`);
-    if (m.parity) p.push(`<span class="pill parity">Parity preview ${m.parity}</span>`);
-    m.issues.forEach(i => p.push(`<span class="pill dash">${esc(i)}</span>`));
+    // at most three: where it is, how close the numbers are, and the one thing in the way
+    const s = stageOf(m.stage), p = [];
+    p.push(`<span class="pill solid" style="--pc:${m.refreshFailed ? "var(--s-fix)" : s.c}">${m.refreshFailed ? "Refresh stopped" : s.short}</span>`);
+    if (m.matched != null && m.stage !== "wait") p.push(`<span class="pill parity">${m.matched} of ${m.tables} tables match</span>`);
+    const block = m.issues.find(i => i !== "Refresh stopped");
+    if (block) p.push(`<span class="pill dash">${esc(block)}</span>`);
     return p.join("");
   };
 
   const events = m => {
-    const ev = [];
-    const t = m.updated;
-    if (m.stage === "pass") {
-      ev.push([t, "Refreshed", "Structural pass", `structural PASS; parity preview ${m.parity} equal (cutoff differs: not a parity result)`]);
-      ev.push([minus(t, 0, 7), "Awaiting analyst", "Refreshed", ""]);
-      ev.push([minus(t, 3, 2), "Structural pass", "Awaiting analyst", "no analyst branch yet; Dev01 holds the automatic conversion, which is not relied on. Pre-check: reads Snowflake and other sources."]);
-      ev.push([minus(t, 8, 6), "Refreshed", "Structural pass", ""]);
-    } else if (m.stage === "wait") {
-      ev.push([t, "Refreshed", "Awaiting data", "objects exist but Snowflake tables are empty; waiting on the data load"]);
-      ev.push([minus(t, 4), "Converted", "Refreshed", ""]);
-    } else if (m.stage === "fix") {
-      ev.push([t, m.refreshFailed ? "Refreshing" : "Refreshed", m.refreshFailed ? "Refresh failed" : "Structural fail", m.refreshFailed ? "refresh did not finish in Dev01; check the gateway and credentials" : `structural FAIL; ${m.tables - m.matched} tables differ from Prod`]);
-      ev.push([minus(t, 5), "Converted", "Refreshed", ""]);
-    } else if (m.stage === "hold") {
-      ev.push([t, "Triage", "On hold", "no production model to compare against"]);
-    }
-    return ev;
+    const t = m.updated, miss = m.matched == null ? 0 : m.tables - m.matched;
+    return ({
+      pass: [[t, `Refreshed. Structure matches; ${m.matched} of ${m.tables} tables have the same numbers in a sample run.`],
+             [minus(t, 3, 2), m.mixed ? "Still reads some tables from outside Snowflake." : "Waiting for someone to pick it up."],
+             [minus(t, 8, 6), "Converted and refreshed."]],
+      wait: [[t, "Tables are in place but empty, so there's nothing to check yet."], [minus(t, 4), "Converted and refreshed."]],
+      fix: m.refreshFailed
+        ? [[t, "Refresh stopped before it finished. Check the connection settings."], [minus(t, 5), "Converted."]]
+        : [[t, `${miss} tables don't match the live model yet.`], [minus(t, 5), "Converted and refreshed."]],
+      hold: [[t, "Paused because there's no live model to compare it with."]],
+    })[m.stage] || [];
   };
 
   const nextStep = m => ({
-    pass: m.mixed ? "Owner decides whether the non-Snowflake sources stay" : "Analyst runs full parity, then business review",
-    wait: "Data engineering loads the empty Snowflake tables",
-    fix: m.refreshFailed ? "Check gateway binding and credentials, then refresh" : "Analyst fixes the structural differences on the model's branch",
-    new: "Pipeline converts the model in a coming batch",
-    hold: "Confirm whether a production model exists to compare against",
+    pass: m.mixed ? "Owner decides whether the other sources stay" : "Run the full numbers check, then hand to the business",
+    wait: "Data team fills the empty tables",
+    fix: m.refreshFailed ? "Fix the connection, then refresh again" : "Fix the differences on the model's branch",
+    new: "Converted in an upcoming batch",
+    hold: "Check whether a live model exists",
   }[m.stage] || "");
+
   const detail = m => {
     const s = stageOf(m.stage);
-    const snow = m.stage === "pass" && !m.mixed ? ["Complete", "Every object exists with rows; reads only Snowflake"]
-      : m.mixed ? ["Partial", "Reads Snowflake and other sources"]
-      : m.stage === "wait" ? ["Empty", "Objects exist but have no rows"]
-      : m.objects === "objects missing" ? ["Missing objects", "Some objects the model needs aren't in Snowflake yet"]
-      : m.stage === "new" ? ["Not checked", "Not converted yet"] : ["Exists", "Objects exist with rows"];
+    const data = m.stage === "new" ? "Not checked yet"
+      : m.mixed ? "Mostly in Snowflake, some tables still elsewhere"
+      : m.stage === "wait" ? "Tables exist but are empty"
+      : m.objects === "Some tables missing" ? "Some tables aren't in Snowflake yet"
+      : "All tables in Snowflake and filled";
+    const nums = m.matched == null ? "Not run yet" : `${m.matched} of ${m.tables} tables match (sample run)`;
     const ev = events(m);
     return `<div class="detail">
-      <div class="sysbox">
-        <span>Snowflake</span><span class="state">${snow[0]}</span><p>${snow[1]}</p>
-        <span>Power BI</span><span class="state">${s.name}</span><p>${m.parity ? `Parity preview ${m.parity} · refreshed ${fmtDT(m.refreshed)}` : "No parity run yet"}</p>
-      </div>
       <dl class="kv">
-        <dt>Stage</dt><dd>${s.name}</dd>
-        <dt>Users (90 days)</dt><dd>${m.users}</dd>
-        <dt>Structural test</dt><dd>${m.structural}</dd>
-        <dt>Parity</dt><dd>${m.parity ? `preview ${m.parity} equal (preview, cutoffs differ)` : "—"}</dd>
-        <dt>Last refresh</dt><dd>${fmtDT(m.refreshed)}</dd>
-        <dt>Last updated</dt><dd>${fmtDT(m.updated)}</dd>
-        <dt>Issue</dt><dd>${m.issues.length ? esc(m.issues.join(", ")) : "None"}</dd>
-        <dt>Likely owner</dt><dd>${esc(m.owner)}</dd>
-        <dt>Next step</dt><dd>${esc(nextStep(m))}</dd>
+        <dt>Status</dt><dd>${s.name}</dd>
+        <dt>Data</dt><dd>${data}</dd>
+        <dt>Numbers</dt><dd>${nums}</dd>
+        <dt>Problem</dt><dd>${m.issues.length ? esc(m.issues[0]) : "None"}</dd>
+        <dt>Next</dt><dd>${esc(nextStep(m))}</dd>
+        <dt>Owner</dt><dd>${esc(m.owner)}</dd>
+        <dt>Used by</dt><dd>${m.users} people in the last 90 days</dd>
+        <dt>Last refreshed</dt><dd>${fmtDT(m.refreshed)}</dd>
       </dl>
-      <div class="right"><p class="dlabel">Work items (${m.work.length})</p>
-      ${m.work.length ? m.work.map(w => `<div class="story"><a href="#" onclick="return false">#${w.id} ${esc(m.name)}</a><span>Assigned to ${esc(w.owner)}</span><small>${w.state} · changed ${fmtDT(w.when)}</small></div>`).join("") : `<p style="margin:0;color:var(--ink-3)">None yet</p>`}
-      ${ev.length ? `<p class="dlabel">What the pipeline says</p><div class="says">${esc(ev[0][3] || ev[0][2].toLowerCase())}</div>
-      <p class="dlabel">Recent pipeline events, Eastern time</p>
-      <div class="events">${ev.map(([d, a, b, note]) => `<time>${fmtDT(d).replace(" EST", "")}</time><div class="tr"><span class="pill">${a}</span>→<span class="pill">${b}</span></div>${note ? `<p>${esc(note)}</p>` : ""}`).join("")}</div>` : ""}</div>
+      <div class="right">
+        <p class="dlabel">Task</p>
+        ${m.work.length ? m.work.map(w => `<div class="story"><a href="#" onclick="return false">#${w.id}</a><span>${esc(w.owner)} · ${w.state}</span></div>`).join("") : `<p style="margin:0;color:var(--ink-3)">None yet</p>`}
+        ${ev.length ? `<p class="dlabel">History</p><div class="events">${ev.map(([d, note]) => `<time>${fmtDT(d).replace(" EST", "")}</time><p style="margin:0;grid-column:auto">${esc(note)}</p>`).join("")}</div>` : ""}
+      </div>
     </div>`;
   };
 
@@ -580,7 +566,7 @@ details.exp[open] summary { color: #c81e1e; }
       const s = stageOf(m.stage), open = st.open.has(m.id);
       return `<article class="card${open ? " open" : ""}" style="--c:${m.refreshFailed ? "var(--s-fix)" : s.c}">
         <div class="head" tabindex="0" role="button" aria-expanded="${open}" data-id="${m.id}" title="Click for detail">
-          <h3>${esc(m.name)}</h3><span class="ws">${esc(m.ws)}</span><span class="tier">Tier ${m.tier}</span>
+          <h3>${esc(m.name)}</h3><span class="ws">${esc(m.ws)}</span><span class="tier">${["", "Simple", "Medium", "Complex"][m.tier]}</span>
           <div class="pills">${pills(m)}</div>
           <div class="meta"><span>Updated ${daysAgo(m.updated)} d ago</span><span>Refreshed ${daysAgo(m.refreshed)} d ago</span></div>
         </div>${open ? detail(m) : ""}</article>`;
@@ -603,7 +589,7 @@ details.exp[open] summary { color: #c81e1e; }
   $("reload").addEventListener("click", () => { $("reload").textContent = "Reloaded"; setTimeout(() => $("reload").textContent = "Reload data", 1200); });
 
   // ---------- mock agent: answers from the tracker data, showing the query it would send to the semantic view ----------
-  const SUGG = ["How many models have passed the structural test?", "Which models are blocked by empty Snowflake tables?", "What changed in the last 7 days?", "Which workspace is furthest behind?", "Which passed models have the most users?"];
+  const SUGG = ["How many models have a matching structure?", "Which models are blocked by empty Snowflake tables?", "What changed in the last 7 days?", "Which workspace is furthest behind?", "Which ready models have the most users?"];
   const chat = $("chat"), msgs = $("msgs");
   const say = (who, html) => { const d = document.createElement("div"); d.className = "msg " + who; d.innerHTML = html; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; };
   const q = sql => `<details><summary>Query against the semantic view</summary><pre>${esc(sql)}</pre></details>`;
@@ -611,15 +597,15 @@ details.exp[open] summary { color: #c81e1e; }
   const answer = text => {
     const t = text.toLowerCase();
     const wsHit = [...new Set(models.map(m => m.ws))].find(w => t.includes(w));
-    if (/(passed|pass).*(structural)|structural.*pass|how many.*pass/.test(t)) {
+    if (/structure|passed|how many.*(pass|match)/.test(t)) {
       const ps = models.filter(m => m.stage === "pass");
-      return `${ps.length} of ${models.length} models have passed the structural test. None has a full parity result yet; their parity previews are:` + li(ps.map(m => `${esc(m.name)}: ${m.parity}`)) +
-        q(`SELECT model_name, parity_preview\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.stage\n  METRICS model.parity_preview)\nWHERE stage = 'Passed structural test';`);
+      return `${ps.length} of ${models.length} models have a matching structure. None has had a full numbers check yet. Tables matching in the sample run:` + li(ps.map(m => `${esc(m.name)}: ${m.matched} of ${m.tables}`)) +
+        q(`SELECT model_name, parity_preview\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.stage\n  METRICS model.parity_preview)\nWHERE stage = 'Structure matches';`);
     }
     if (/empty|blocked|waiting|awaiting/.test(t)) {
-      const w = models.filter(m => m.issues.includes("Snowflake tables are empty"));
-      return `${w.length} models are waiting because their Snowflake tables exist but are empty:` + li(w.map(m => `${esc(m.name)} <span class="ws">${esc(m.ws)}</span>`)) + `They move on automatically once the data load fills those tables.` +
-        q(`SELECT model_name, workspace\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.workspace, issue.issue_label)\nWHERE issue_label = 'Snowflake tables are empty';`);
+      const w = models.filter(m => m.issues.includes("No data in tables yet"));
+      return `${w.length} models are waiting because their tables exist but are empty:` + li(w.map(m => `${esc(m.name)} <span class="ws">${esc(m.ws)}</span>`)) + `They move on automatically once the data load fills those tables.` +
+        q(`SELECT model_name, workspace\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.workspace, issue.issue_label)\nWHERE issue_label = 'No data in tables yet';`);
     }
     if (/chang|moved|week|7 days|recent/.test(t)) {
       return `Over the 7 days before the last load, ${MOVES.length} models changed stage:` + li(MOVES.map(x => `${esc(models[x.id].name)}: ${stageOf(x.from).name} → ${stageOf(x.to).name}`)) + `The last load itself had no stage changes.` +
@@ -628,7 +614,7 @@ details.exp[open] summary { color: #c81e1e; }
     if (/workspace|behind|furthest/.test(t) && !wsHit) {
       const by = {}; models.forEach(m => { by[m.ws] = by[m.ws] || { n: 0, p: 0 }; by[m.ws].n++; if (SI[m.stage] <= SI.fix) by[m.ws].p++; });
       const rows = Object.entries(by).map(([w, v]) => [w, v.p / v.n, v]).sort((a, b) => a[1] - b[1]);
-      return `By share of models already in Dev01 or further along:` + li(rows.map(([w, r, v]) => `<span class="ws">${esc(w)}</span>: ${v.p} of ${v.n} (${Math.round(r * 100)}%)`)) + `<span class="ws">${esc(rows[0][0])}</span> is furthest behind.` +
+      return `Share of each workspace's models that have started:` + li(rows.map(([w, r, v]) => `<span class="ws">${esc(w)}</span>: ${v.p} of ${v.n} (${Math.round(r * 100)}%)`)) + `<span class="ws">${esc(rows[0][0])}</span> is furthest behind.` +
         q(`SELECT workspace, models_started, models_in_scope,\n       models_started / models_in_scope AS share_started\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.workspace\n  METRICS model.models_started, model.models_in_scope)\nORDER BY share_started;`);
     }
     if (wsHit) {
@@ -636,15 +622,15 @@ details.exp[open] summary { color: #c81e1e; }
       return `<span class="ws">${esc(wsHit)}</span> has ${ms.length} models in scope:` + li(STAGES.filter(s => ms.some(m => m.stage === s.id)).map(s => `${s.name}: ${ms.filter(m => m.stage === s.id).length}`)) +
         q(`SELECT stage, models_in_scope\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.stage\n  METRICS model.models_in_scope)\nWHERE workspace = '${wsHit}';`);
     }
-    if (/users|most used|priorit/.test(t)) {
+    if (/users|most used|priorit|ready models/.test(t)) {
       const ms = models.filter(m => m.stage === "pass").sort((a, b) => b.users - a.users);
-      return `Passed models by users in the last 90 days:` + li(ms.map(m => `${esc(m.name)}: ${m.users}`)) + `${esc(ms[0].name)} reaches the most people, so it's the best candidate to put in front of its business owner first.` +
-        q(`SELECT model_name, users_90d\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.stage\n  METRICS usage.users_90d)\nWHERE stage = 'Passed structural test'\nORDER BY users_90d DESC;`);
+      return `Models with a matching structure, by users in the last 90 days:` + li(ms.map(m => `${esc(m.name)}: ${m.users}`)) + `${esc(ms[0].name)} reaches the most people, so it's the best one to hand to the business first.` +
+        q(`SELECT model_name, users_90d\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.stage\n  METRICS usage.users_90d)\nWHERE stage = 'Structure matches'\nORDER BY users_90d DESC;`);
     }
     const owner = OWNERS.find(o => o !== "Unassigned" && t.includes(o.split(" ")[0].toLowerCase()));
     if (owner) {
       const ms = models.filter(m => m.owner === owner);
-      return `${esc(owner)} is the likely owner of ${ms.length} models, ${ms.filter(m => SI[m.stage] <= SI.fix).length} of them already in Dev01 or further along.` +
+      return `${esc(owner)} is the likely owner of ${ms.length} models, ${ms.filter(m => SI[m.stage] <= SI.fix).length} of them already started.` +
         q(`SELECT model_name, stage\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.stage, owner.owner_name)\nWHERE owner_name = '${owner}';`);
     }
     return `I can answer questions about stages, blockers, recent changes, workspaces, owners and usage. Try one of these:`;
