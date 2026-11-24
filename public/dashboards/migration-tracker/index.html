@@ -180,10 +180,7 @@ details.exp[open] summary { color: #c81e1e; }
       <h2>Filters</h2>
       <div class="fld"><label for="f-q">Search</label><input type="search" id="f-q" placeholder="Model, workspace or text"></div>
       <div class="fld"><label for="f-stage">Stage</label><select id="f-stage"></select></div>
-      <div class="fld"><label for="f-pipe">Current step</label><select id="f-pipe"></select></div>
-      <div class="fld"><label for="f-ready">Snowflake tables</label><select id="f-ready"></select></div>
-      <div class="fld"><label for="f-tier">Complexity</label><select id="f-tier"></select></div>
-      <div class="fld"><label for="f-issue">Issue</label><select id="f-issue"></select></div>
+      <div class="fld"><label for="f-issue">Problem</label><select id="f-issue"></select></div>
       <div class="fld"><label for="f-owner">Owner</label><select id="f-owner"></select></div>
       <div class="fld"><label for="f-ws">Workspace</label><select id="f-ws"></select></div>
       <label class="chk"><input type="checkbox" id="f-signin"> <span id="signin-lbl">Needs an owner sign-in</span></label>
@@ -203,7 +200,7 @@ details.exp[open] summary { color: #c81e1e; }
     </div>
 
     <section class="summary" aria-label="Progress">
-      <div class="big"><b id="deployed">0</b><span>of 90 deployed</span></div>
+      <div class="big"><b id="deployed">0</b><span>of 90 released</span></div>
       <p class="sub2" id="sub2"></p>
       <div class="bar" id="bar"></div>
       <div class="groups" id="groups"></div>
@@ -242,7 +239,7 @@ details.exp[open] summary { color: #c81e1e; }
     </details>
 
     <details class="exp">
-      <summary>Reports from the pipeline views</summary>
+      <summary>Reports</summary>
       <div class="expbody"><label style="display:grid;gap:6px;max-width:360px;margin-bottom:12px">Report<select class="sortsel" id="rep-sel"></select></label><div id="rep-out"></div></div>
     </details>
 
@@ -251,9 +248,7 @@ details.exp[open] summary { color: #c81e1e; }
         <select class="sortsel" id="sort">
           <option value="progress">Progress (furthest first)</option>
           <option value="users">Users (90 days)</option>
-          <option value="updated">Recently updated</option>
           <option value="name">Model name</option>
-          <option value="parity">Numbers matching (best first)</option>
         </select>
       </div>
       <label class="chk"><input type="checkbox" id="reverse"> Reverse</label>
@@ -284,19 +279,17 @@ details.exp[open] summary { color: #c81e1e; }
   const STAGES = [
     { id: "deployed", name: "Released", short: "Released", c: "var(--s-deployed)" },
     { id: "review", name: "With the business", short: "With business", c: "var(--s-review)" },
-    { id: "ready", name: "Ready for the business", short: "Ready to hand over", c: "var(--s-ready)" },
     { id: "pass", name: "Structure matches", short: "✓ Structure matches", c: "var(--s-pass)" },
     { id: "wait", name: "Waiting for data", short: "Waiting for data", c: "var(--s-wait)" },
     { id: "fix", name: "Being fixed", short: "Needs fixes", c: "var(--s-fix)" },
     { id: "new", name: "Not started", short: "Not started", c: "var(--s-new)" },
-    { id: "hold", name: "Paused", short: "Paused", c: "var(--s-hold)" },
   ];
   const SI = Object.fromEntries(STAGES.map((s, i) => [s.id, i]));
-  const COUNTS = { deployed: 0, review: 0, ready: 0, pass: 4, wait: 6, fix: 16, new: 63, hold: 1 };
+  const COUNTS = { deployed: 0, review: 0, pass: 4, wait: 6, fix: 16, new: 64 };
   const GROUPS = [
-    { label: "Passed testing", ids: ["deployed", "review", "ready", "pass"] },
+    { label: "Checks passed", ids: ["deployed", "review", "pass"] },
     { label: "In progress", ids: ["wait", "fix"] },
-    { label: "Not started", ids: ["new", "hold"] },
+    { label: "Not started", ids: ["new"] },
   ];
 
   // ---------- made-up models ----------
@@ -336,6 +329,7 @@ details.exp[open] summary { color: #c81e1e; }
   STAGES.forEach(s => { for (let i = 0; i < COUNTS[s.id]; i++) stageList.push(s.id); });
 
   const models = stageList.map((stage, i) => {
+    const paused = stage === "new" && i === stageList.length - 1;
     const tier = stage === "pass" ? 2 : pick([1, 2, 2, 2, 3, 3]);
     const tables = int(12, 140) * (rnd() < .2 ? 6 : 1);
     const m = { id: i, name: NAMES[i], ws: pick(WS), stage, tier, owner: pick(OWNERS), users: int(3, 260), tables };
@@ -350,7 +344,8 @@ details.exp[open] summary { color: #c81e1e; }
       m.pipe = m.refreshFailed ? "Refresh stopped" : "Needs fixes";
       m.objects = pick(["Tables ready", "Tables ready", "Some tables missing"]); m.matched = Math.round(tables * (.45 + rnd() * .5)); m.structural = "FAIL";
       m.issues = m.refreshFailed ? ["Refresh stopped"] : ["Doesn't match live model"];
-    } else if (stage === "hold") { m.pipe = "Paused"; m.objects = "—"; m.matched = null; m.structural = "—"; m.issues = ["Nothing to compare with"]; }
+    }
+    else if (paused) { m.pipe = "Not started"; m.objects = "—"; m.matched = null; m.structural = "—"; m.issues = ["Nothing to compare with"]; }
     else { m.pipe = "Not started"; m.objects = rnd() < .3 ? "Tables ready" : "Some tables missing"; m.matched = null; m.structural = "—"; m.issues = []; }
     m.parity = m.matched == null ? null : `${m.matched}/${tables}`;
     m.work = stage === "new" ? [] : [{ id: 740000 + int(100, 9999), owner: m.owner, state: stage === "pass" ? "Waiting to release" : "In progress", when: minus(m.updated, 1) }];
@@ -370,9 +365,6 @@ details.exp[open] summary { color: #c81e1e; }
     $(sel).addEventListener("change", e => { e.target.classList.toggle("ph", !e.target.value); render(); });
   };
   opts("f-stage", STAGES.map(s => s.name));
-  opts("f-pipe", [...new Set(models.map(m => m.pipe))]);
-  opts("f-ready", ["Tables ready", "Tables empty", "Some tables missing"]);
-  opts("f-tier", ["Simple", "Medium", "Complex"]);
   opts("f-issue", [...new Set(models.flatMap(m => m.issues))]);
   opts("f-owner", [...new Set(models.map(m => m.owner))].sort());
   opts("f-ws", [...new Set(models.map(m => m.ws))].sort(), "All");
@@ -387,9 +379,6 @@ details.exp[open] summary { color: #c81e1e; }
       (!q || [m.name, m.ws, m.owner, ...m.issues].join(" ").toLowerCase().includes(q)) &&
       (!v("f-stage") || stageOf(m.stage).name === v("f-stage")) &&
       (!st.barStage || m.stage === st.barStage) &&
-      (!v("f-pipe") || m.pipe === v("f-pipe")) &&
-      (!v("f-ready") || m.objects === v("f-ready")) &&
-      (!v("f-tier") || ["", "Simple", "Medium", "Complex"][m.tier] === v("f-tier")) &&
       (!v("f-issue") || m.issues.includes(v("f-issue"))) &&
       (!v("f-owner") || m.owner === v("f-owner")) &&
       (!v("f-ws") || m.ws === v("f-ws")) &&
@@ -470,8 +459,8 @@ details.exp[open] summary { color: #c81e1e; }
     for (let w = 0; w < weeks; w++) {
       const f = w / (weeks - 1), c = {};
       c.pass = Math.round(COUNTS.pass * f); c.wait = Math.round(COUNTS.wait * Math.min(1, f * 1.4));
-      c.fix = Math.round(COUNTS.fix * Math.min(1, f * 1.2)); c.hold = COUNTS.hold;
-      c.new = models.length - c.pass - c.wait - c.fix - c.hold;
+      c.fix = Math.round(COUNTS.fix * Math.min(1, f * 1.2));
+      c.new = models.length - c.pass - c.wait - c.fix;
       out.push({ d: minus(LOAD, (weeks - 1 - w) * 7), c });
     }
     return out;
@@ -479,7 +468,7 @@ details.exp[open] summary { color: #c81e1e; }
   const drawReports = () => {
     const sel = $("rep-sel").value, host = $("rep-out");
     if (sel === "progress") {
-      const W = 640, H = 220, M = { l: 36, b: 24, t: 8 }, bw = (W - M.l) / history.length * 0.7, order = ["pass", "wait", "fix", "new", "hold"];
+      const W = 640, H = 220, M = { l: 36, b: 24, t: 8 }, bw = (W - M.l) / history.length * 0.7, order = ["pass", "wait", "fix", "new"];
       const y = v => M.t + (H - M.t - M.b) * (1 - v / models.length);
       let g = "";
       [0, 30, 60, 90].forEach(v => g += `<line x1="${M.l}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${M.l - 6}" y="${y(v) + 4}" font-size="11" text-anchor="end" fill="var(--ink-3)">${v}</text>`);
@@ -519,7 +508,7 @@ details.exp[open] summary { color: #c81e1e; }
       fix: m.refreshFailed
         ? [[t, "Refresh stopped before it finished. Check the connection settings."], [minus(t, 5), "Converted."]]
         : [[t, `${miss} tables don't match the live model yet.`], [minus(t, 5), "Converted and refreshed."]],
-      hold: [[t, "Paused because there's no live model to compare it with."]],
+      new: m.issues.length ? [[t, "Paused because there's no live model to compare it with."]] : [],
     })[m.stage] || [];
   };
 
@@ -527,8 +516,7 @@ details.exp[open] summary { color: #c81e1e; }
     pass: m.mixed ? "Owner decides whether the other sources stay" : "Run the full numbers check, then hand to the business",
     wait: "Data team fills the empty tables",
     fix: m.refreshFailed ? "Fix the connection, then refresh again" : "Fix the differences on the model's branch",
-    new: "Converted in an upcoming batch",
-    hold: "Check whether a live model exists",
+    new: m.issues.length ? "Check whether a live model exists" : "Converted in an upcoming batch",
   }[m.stage] || "");
 
   const detail = m => {

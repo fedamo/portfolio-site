@@ -40,7 +40,7 @@ The app only reads. The pipeline owns and loads the data, so the dashboard can n
 - **A freshness stamp** that turns amber when the data is more than two days old.
 - **A stage bar** across the top showing how many models sit at each stage.
 - **A "What changed" panel** covering the last load, 24 hours or 7 days.
-- **A grid of cards**, one per model, tinted by stage, with pills for each check. Clicking a card opens its Snowflake
+- **A grid of cards**, one per model, tinted by stage, with a few tags showing where it is and what's in its way. Clicking a card opens its Snowflake
   and Power BI status, the issue, the owner, the next step and its linked Azure DevOps work items.
 - **Filters** in a side pane that can be hidden, and that survive reruns.
 - **A "How to read the cards" guide** built from the pipeline's own stage definitions, so it can't fall out of date.
@@ -53,7 +53,7 @@ The Snowflake objects are generated from code by a build script. Nothing is writ
 
 The centre of it is a **semantic view** over six pipeline views and tables: models, test failures, blocking objects,
 daily progress, state-change events and the load log. It defines the two relationships (test failures to models,
-events to models), computed flags such as "has passed" and "real failure or preview", and the dimensions and metrics,
+events to models), computed flags such as "has passed" and "real failure or just a sample run", and the dimensions and metrics,
 each with synonyms and a comment. The 17 report queries live in it too, each tagged with the question it answers, so
 they double as verified queries for the agent.
 
@@ -61,7 +61,7 @@ The **Cortex agent** has one tool: Cortex Analyst, turning questions into SQL ov
 carry the business rules:
 
 - what "passed" means;
-- count real failures and ignore previews;
+- count real failures and ignore sample runs;
 - user counts are per model, so one person can count towards several models;
 - if the data can't answer, say so instead of guessing.
 
