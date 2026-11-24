@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Migration Tracker (mock-up)</title>
+<title>Model Move Tracker (mock-up)</title>
 <meta name="description" content="Mock-up of a migration status app: progress of BI semantic models moving from Synapse to Snowflake. Made-up models and data.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
@@ -180,12 +180,12 @@ details.exp[open] summary { color: #c81e1e; }
     <label class="showf"><input type="checkbox" id="showf" checked> Show filters</label>
     <div class="filters">
       <h2>Filters</h2>
-      <div class="fld"><label for="f-q">Search</label><input type="search" id="f-q" placeholder="Model, workspace or text"></div>
+      <div class="fld"><label for="f-q">Search</label><input type="search" id="f-q" placeholder="Search models or workspaces"></div>
       <div class="fld"><label for="f-stage">Stage</label><select id="f-stage"></select></div>
       <div class="fld"><label for="f-issue">Problem</label><select id="f-issue"></select></div>
       <div class="fld"><label for="f-owner">Owner</label><select id="f-owner"></select></div>
       <div class="fld"><label for="f-ws">Workspace</label><select id="f-ws"></select></div>
-      <label class="chk"><input type="checkbox" id="f-signin"> <span id="signin-lbl">Needs an owner sign-in</span></label>
+      <label class="chk"><input type="checkbox" id="f-signin"> <span id="signin-lbl">Waiting on owner approval</span></label>
     </div>
   </aside>
 
@@ -193,17 +193,17 @@ details.exp[open] summary { color: #c81e1e; }
     <p class="mock" role="note"><b>Mock-up with made-up data.</b> A replica of a real migration tracker, rebuilt to show how it works. Every model, workspace, person and number is invented. <a href="/projects/migration-status-dashboard/">How the real one was built</a></p>
     <div class="top">
       <div>
-        <h1>Power BI migration status</h1>
-        <p class="subt">90 in-scope models · Synapse to Snowflake · made-up sample data</p>
+        <h1>Model move tracker</h1>
+        <p class="subt"><span id="n-models"></span> semantic models moving to Snowflake · made-up sample data</p>
       </div>
       <div class="topright">
-        <button class="agent" id="agent">› Ask migration agent</button>
-        <div class="stamp" id="stampbox" title="Turns amber when the data is more than 2 days old"><small>Pipeline data as of</small><span id="stamp"></span><em id="stamp-age"></em></div>
+        <button class="agent" id="agent">Ask the tracker</button>
+        <div class="stamp" id="stampbox" title="Turns amber when the data is more than 2 days old"><small>Data loaded</small><span id="stamp"></span><em id="stamp-age"></em></div>
       </div>
     </div>
 
     <section class="summary" aria-label="Progress">
-      <div class="big"><b id="deployed">0</b><span>of 90 released</span></div>
+      <div class="big"><b id="deployed">0</b><span>of <span id="n-total"></span> live</span></div>
       <p class="sub2" id="sub2"></p>
       <div class="bar" id="bar"></div>
       <div class="groups" id="groups"></div>
@@ -211,27 +211,27 @@ details.exp[open] summary { color: #c81e1e; }
     </section>
 
     <details class="exp" id="changed">
-      <summary id="changed-sum">What changed: no stage changes in the last load</summary>
+      <summary id="changed-sum">Changes: nothing moved since the last load</summary>
       <div class="expbody">
         <p style="margin:0">Window</p>
         <div class="radios" id="window">
-          <label><input type="radio" name="win" value="load" checked> Since last load</label>
-          <label><input type="radio" name="win" value="24h"> 24 hours</label>
-          <label><input type="radio" name="win" value="7d"> 7 days</label>
+          <label><input type="radio" name="win" value="load" checked> Last load</label>
+          <label><input type="radio" name="win" value="24h"> Last day</label>
+          <label><input type="radio" name="win" value="7d"> Last week</label>
         </div>
         <p id="win-text" style="margin:0"></p>
         <div class="stats">
-          <div class="stat"><small>Moved forward</small><b id="st-fwd">0</b></div>
-          <div class="stat"><small>Newly passed</small><b id="st-pass">0</b></div>
-          <div class="stat down"><small>Moved back</small><b id="st-back">0</b></div>
+          <div class="stat"><small>Moved on</small><b id="st-fwd">0</b></div>
+          <div class="stat"><small>Passed checks</small><b id="st-pass">0</b></div>
+          <div class="stat down"><small>Slipped back</small><b id="st-back">0</b></div>
         </div>
         <p id="win-list" style="margin:0"></p>
-        <label class="chk" style="margin-top:10px"><input type="checkbox" id="only-changed"> Show only the cards that changed stage</label>
+        <label class="chk" style="margin-top:10px"><input type="checkbox" id="only-changed"> Only show models that moved</label>
       </div>
     </details>
 
     <details class="exp">
-      <summary>How to read the cards</summary>
+      <summary>Reading the cards</summary>
       <div class="expbody">
         <p>The colour down the left of each card shows where the model is, using the same colours as the bar above. Each card has up to three tags:</p>
         <div class="keyrow"><span class="pill solid" style="--pc:var(--s-pass)">✓ Structure matches</span> where the model is now.</div>
@@ -249,19 +249,19 @@ details.exp[open] summary { color: #c81e1e; }
     <div class="controls">
       <div><span class="lbl">Sort by</span>
         <select class="sortsel" id="sort">
-          <option value="progress">Progress (furthest first)</option>
-          <option value="users">Users (90 days)</option>
+          <option value="progress">Furthest along first</option>
+          <option value="users">Most used first</option>
           <option value="name">Model name</option>
         </select>
       </div>
       <label class="chk"><input type="checkbox" id="reverse"> Reverse</label>
-      <div><span class="lbl">Card size</span>
+      <div><span class="lbl">View</span>
         <div class="radios" style="margin:0" id="size">
-          <label><input type="radio" name="size" value="cards" checked> Cards</label>
+          <label><input type="radio" name="size" value="cards" checked> Full</label>
           <label><input type="radio" name="size" value="compact"> Compact</label>
         </div>
       </div>
-      <button class="reload" id="reload">Reload data</button>
+      <button class="reload" id="reload">Refresh</button>
     </div>
 
     <p class="count" id="count"></p>
@@ -271,8 +271,8 @@ details.exp[open] summary { color: #c81e1e; }
   </main>
 </div>
 
-<aside class="chat" id="chat" aria-label="Migration agent" aria-hidden="true">
-  <header><div><b>Migration agent</b><small>Answers from the semantic view over the pipeline results</small></div><button class="x" id="chat-x" aria-label="Close">×</button></header>
+<aside class="chat" id="chat" aria-label="Tracker chat" aria-hidden="true">
+  <header><div><b>Ask the tracker</b><small>Answers from the semantic view over the pipeline results</small></div><button class="x" id="chat-x" aria-label="Close">×</button></header>
   <div class="msgs" id="msgs" aria-live="polite"></div>
   <form id="chat-f"><input id="chat-in" placeholder="Ask about the migration" autocomplete="off" aria-label="Question"><button>Ask</button></form>
 </aside>
@@ -288,7 +288,7 @@ details.exp[open] summary { color: #c81e1e; }
     { id: "new", name: "Not started", short: "Not started", c: "var(--s-new)" },
   ];
   const SI = Object.fromEntries(STAGES.map((s, i) => [s.id, i]));
-  const COUNTS = { deployed: 0, review: 0, pass: 4, wait: 6, fix: 16, new: 64 };
+  const COUNTS = { deployed: 1, review: 2, pass: 6, wait: 5, fix: 13, new: 57 };
   const GROUPS = [
     { label: "Checks passed", ids: ["deployed", "review", "pass"] },
     { label: "In progress", ids: ["wait", "fix"] },
@@ -296,34 +296,17 @@ details.exp[open] summary { color: #c81e1e; }
   ];
 
   // ---------- made-up models ----------
-  let seed = 4207;
+  let seed = 91;
   const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
   const pick = a => a[Math.floor(rnd() * a.length)];
   const int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 
-  const NAMES = ["Claims Aging Summary", "Broker Commission Tracker", "Policy Renewals Pipeline", "Premium Bordereaux", "Loss Run Explorer",
-    "Underwriting Workbench", "Quote to Bind Funnel", "Carrier Scorecard", "Daily Cash Receipts", "Cat Exposure Monitor",
-    "Producer Production", "Submission Intake Trends", "Billing Exceptions", "Reinsurance Recoverables", "Program Profitability",
-    "Endorsement Activity", "Agency Hierarchy", "Collections Forecast", "Supplier Payments", "Unearned Premium Roll",
-    "Fee Income Bridge", "Earnings Walk", "Monthly Close Pack", "Claims Reserve Movement", "Policy Count Trends",
-    "Pending Policy Issuance", "Quote Pipeline", "Benefit Plan Mix", "Daily Volume Trends", "Refresh Duration Insights",
-    "Workspace Usage Stats", "Metadata Inventory", "Peer Benchmarking", "Exception Workflow", "Treaty Placement",
-    "Surplus Lines Tax", "Certificates Issued", "Premium Finance", "Loss Ratio by Line", "Retention Analysis",
-    "Cross-sell Opportunities", "New Business Hit Ratio", "Claim Litigation Tracker", "Subrogation Recovery", "Large Loss Watchlist",
-    "Expense Allocation", "Headcount Planning", "Budget vs Actual", "General Ledger Detail", "Intercompany Recon",
-    "Data Quality Scorecard", "Dataset Refresh Monitor", "Capacity Utilisation", "Gateway Health", "Report Usage",
-    "Territory Mix", "Binding Authority Audit", "Coverholder Returns", "Risk Survey Findings", "Inspection Backlog",
-    "Customer Complaints", "Service Level Tracker", "Policy Admin Feed", "Bordereaux Reconciliation", "Rate Change Monitor",
-    "Pricing Adequacy", "Portfolio Mix", "Wholesale Dashboard", "Specialty Lines Overview", "Property Schedule",
-    "Fleet Exposure", "Workers Comp Payroll", "Medical Stop Loss", "Life Policy Inforce", "Annuity Flows",
-    "Commission Statements", "Agent Onboarding", "Market Placement", "Carrier Appetite", "Declinations Analysis",
-    "Renewal Retention", "Premium Audit", "Experience Mod Tracker", "Claims Handler Workload", "FNOL Volumes",
-    "Reserve Adequacy", "Payment Run Review", "Vendor Spend", "Policy Lapse Watch", "Executive Summary"];
-  const WS = ["finance-rpts", "underwriting-analytics", "claims-reporting", "accounting-operations", "bi-and-analytics", "bi-and-analytics-tools", "uw-portfolio-reporting", "distribution-insights"];
+  const NAMES = ["Fleet Telematics", "Garden Centre Sales", "Hotel Occupancy", "Library Loans", "Wind Farm Output", "Clinic Wait Times", "Ferry Bookings", "Ski Pass Usage", "Bakery Waste", "Museum Footfall", "Bike Share Trips", "Recycling Tonnage", "Concert Ticketing", "Greenhouse Climate", "Port Container Moves", "Vineyard Harvest", "Taxi Dispatch", "Gym Memberships", "Water Meter Reads", "Parcel Lockers", "Airport Gate Use", "Theatre Seating", "School Meals", "Charging Stations", "Farm Yields", "Warehouse Picking", "Call Centre Queues", "Cinema Admissions", "Bridge Tolls", "Laundry Rounds", "Coffee Roastery", "Marina Berths", "Allotment Plots", "Bus Punctuality", "Dental Recalls", "Paint Mixing", "Seed Catalogue", "Brewery Batches", "Kite Shop Stock", "Zoo Visitors", "Orchard Pruning", "Tram Ridership", "Pottery Kilns", "Choir Rehearsals", "Forest Survey", "Snow Clearing", "Beekeeping Hives", "Canal Locks", "Yoga Bookings", "Cheese Ageing", "Lighthouse Logs", "Glacier Melt", "Tea Blending", "Rowing Club", "Quarry Output", "Bookshop Orders", "Ice Rink Sessions", "Mushroom Farm", "Street Lighting", "Pet Adoptions", "Surf Forecast", "Hedge Trimming", "Fishing Quotas", "Organ Recitals", "Tyre Fitting", "Kayak Rentals", "Plant Nursery", "Puppet Shows", "Weather Balloons", "Village Hall", "Hop Picking", "Clock Repairs", "Sailing School", "Pumpkin Patch", "Moth Counts", "Stained Glass", "Cider Press", "Bell Ringing", "Tide Tables", "Herb Garden", "Pier Fishing", "Rope Making", "Lantern Parade", "Salt Marsh"];
+  const WS = ["north-region", "south-region", "east-region", "west-region", "head-office", "shared-services"];
   const OWNERS = ["Alex Rivera", "Priya Natarajan", "Sam Okafor", "Jordan Lee", "Casey Morgan", "Taylor Brooks", "Unassigned"];
 
-  const NOW = new Date(2026, 10, 23, 20, 9);
-  const LOAD = new Date(2026, 10, 10, 19, 38), PREV = new Date(2026, 10, 10, 15, 47);
+  const NOW = new Date(2026, 10, 19, 14, 25);
+  const LOAD = new Date(2026, 10, 18, 9, 12), PREV = new Date(2026, 10, 17, 9, 5);
   const daysAgo = d => Math.round((NOW - d) / 864e5);
   const fmtDT = d => d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + " EST";
   const minus = (d, days, h = 0) => new Date(d - days * 864e5 - h * 36e5);
@@ -338,9 +321,10 @@ details.exp[open] summary { color: #c81e1e; }
     const m = { id: i, name: NAMES[i], ws: pick(WS), stage, tier, owner: pick(OWNERS), users: int(3, 260), tables };
     m.updated = minus(LOAD, stage === "new" ? int(20, 60) : int(5, 25), int(0, 12));
     m.refreshed = minus(m.updated, int(0, 2), int(1, 8));
-    m.signin = stage === "pass" && i === 2;
+    m.signin = stage === "review";
     m.mixed = rnd() < .12;
-    if (stage === "pass") { m.pipe = "Structure matches"; m.objects = m.mixed ? "Some tables missing" : "Tables ready"; m.matched = Math.round(tables * (.6 + rnd() * .35)); m.structural = "PASS"; m.issues = m.mixed ? ["Uses other sources too"] : []; }
+    if (stage === "deployed" || stage === "review") { m.pipe = stage === "deployed" ? "Released" : "With the business"; m.objects = "Tables ready"; m.matched = tables; m.structural = "PASS"; m.issues = []; }
+    else if (stage === "pass") { m.pipe = "Structure matches"; m.objects = m.mixed ? "Some tables missing" : "Tables ready"; m.matched = Math.round(tables * (.6 + rnd() * .35)); m.structural = "PASS"; m.issues = m.mixed ? ["Uses other sources too"] : []; }
     else if (stage === "wait") { m.pipe = "Waiting for data"; m.objects = "Tables empty"; m.matched = int(0, 3); m.structural = "FAIL"; m.issues = ["No data in tables yet"]; }
     else if (stage === "fix") {
       m.refreshFailed = rnd() < .15;
@@ -362,7 +346,7 @@ details.exp[open] summary { color: #c81e1e; }
   const pctMatch = m => m.matched == null ? -1 : m.matched / m.tables;
 
   // ---------- filters ----------
-  const opts = (sel, list, ph = "Choose an option") => {
+  const opts = (sel, list, ph = "Any") => {
     $(sel).innerHTML = `<option value="">${ph}</option>` + list.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
     $(sel).classList.add("ph");
     $(sel).addEventListener("change", e => { e.target.classList.toggle("ph", !e.target.value); render(); });
@@ -371,7 +355,7 @@ details.exp[open] summary { color: #c81e1e; }
   opts("f-issue", [...new Set(models.flatMap(m => m.issues))]);
   opts("f-owner", [...new Set(models.map(m => m.owner))].sort());
   opts("f-ws", [...new Set(models.map(m => m.ws))].sort(), "All");
-  $("signin-lbl").textContent = `Needs an owner sign-in (${models.filter(m => m.signin).length})`;
+  $("signin-lbl").textContent = `Waiting on owner approval (${models.filter(m => m.signin).length})`;
 
   const st = { open: new Set([0]), barStage: null };
 
@@ -405,7 +389,7 @@ details.exp[open] summary { color: #c81e1e; }
     const total = models.length;
     const passedOrBeyond = models.filter(m => SI[m.stage] <= SI.pass).length;
     $("deployed").textContent = COUNTS.deployed;
-    $("sub2").textContent = `${passedOrBeyond} have a matching structure or are further along · none has had a full numbers check yet`;
+    $("sub2").textContent = `${passedOrBeyond} have passed checks or are further along · ${models.filter(m => m.matched === m.tables).length} fully match the live models`;
     $("bar").innerHTML = STAGES.filter(s => COUNTS[s.id] > 0).map(s =>
       `<button style="flex:${COUNTS[s.id]};background:${s.c}" data-s="${s.id}" class="${st.barStage === s.id ? "on" : ""}" title="${s.name}: ${COUNTS[s.id]}" aria-label="${s.name}: ${COUNTS[s.id]}. Filter cards">${COUNTS[s.id] >= 3 ? COUNTS[s.id] : ""}</button>`).join("");
     let acc = 0;
@@ -447,7 +431,7 @@ details.exp[open] summary { color: #c81e1e; }
     $("win-list").innerHTML = mv.length
       ? mv.map(x => `<strong>${esc(models[x.id].name)}</strong>: ${stageOf(x.from).name} → ${stageOf(x.to).name}`).join("<br>")
       : "No model changed stage in this window.<br>1 model ran with no stage change";
-    $("changed-sum").textContent = mv.length ? `What changed: ${mv.length} stage change${mv.length > 1 ? "s" : ""} in this window` : "What changed: no stage changes in the last load";
+    $("changed-sum").textContent = mv.length ? `Changes: ${mv.length} model${mv.length > 1 ? "s" : ""} moved in this window` : "Changes: nothing moved since the last load";
   };
 
   // ---------- reports ----------
@@ -516,6 +500,8 @@ details.exp[open] summary { color: #c81e1e; }
   };
 
   const nextStep = m => ({
+    deployed: "Nothing, it's live",
+    review: "Business owner signs it off",
     pass: m.mixed ? "Owner decides whether the other sources stay" : "Run the full numbers check, then hand to the business",
     wait: "Data team fills the empty tables",
     fix: m.refreshFailed ? "Fix the connection, then refresh again" : "Fix the differences on the model's branch",
@@ -539,7 +525,7 @@ details.exp[open] summary { color: #c81e1e; }
         <dt>Problem</dt><dd>${m.issues.length ? esc(m.issues[0]) : "None"}</dd>
         <dt>Next</dt><dd>${esc(nextStep(m))}</dd>
         <dt>Owner</dt><dd>${esc(m.owner)}</dd>
-        <dt>Used by</dt><dd>${m.users} people in the last 90 days</dd>
+        <dt>Used by</dt><dd>${m.users} people in the last 3 months</dd>
         <dt>Last refreshed</dt><dd>${fmtDT(m.refreshed)}</dd>
       </dl>
       <div class="right">
@@ -552,7 +538,7 @@ details.exp[open] summary { color: #c81e1e; }
 
   const render = () => {
     const list = filtered();
-    $("count").textContent = `Showing ${list.length} of ${models.length} models`;
+    $("count").textContent = `${list.length} of ${models.length} models shown`;
     $("grid").innerHTML = list.length ? list.map(m => {
       const s = stageOf(m.stage), open = st.open.has(m.id);
       return `<article class="card${open ? " open" : ""}" style="--c:${m.refreshFailed ? "var(--s-fix)" : s.c}">
@@ -577,10 +563,10 @@ details.exp[open] summary { color: #c81e1e; }
   document.querySelectorAll("input[name=win]").forEach(r => r.addEventListener("change", () => { drawChanged(); render(); }));
   document.querySelectorAll("input[name=size]").forEach(r => r.addEventListener("change", e => $("main").classList.toggle("compact", e.target.value === "compact")));
   $("showf").addEventListener("change", e => $("app").classList.toggle("nofilters", !e.target.checked));
-  $("reload").addEventListener("click", () => { $("reload").textContent = "Reloaded"; setTimeout(() => $("reload").textContent = "Reload data", 1200); });
+  $("reload").addEventListener("click", () => { $("reload").textContent = "Refreshed"; setTimeout(() => $("reload").textContent = "Refresh", 1200); });
 
   // ---------- mock agent: answers from the tracker data, showing the query it would send to the semantic view ----------
-  const SUGG = ["How many models have a matching structure?", "Which models are blocked by empty Snowflake tables?", "What changed in the last 7 days?", "Which workspace is furthest behind?", "Which ready models have the most users?"];
+  const SUGG = ["How many models have a matching structure?", "Which models are blocked by empty Snowflake tables?", "What moved in the last week?", "Which workspace is furthest behind?", "Which ready models have the most users?"];
   const chat = $("chat"), msgs = $("msgs");
   const say = (who, html) => { const d = document.createElement("div"); d.className = "msg " + who; d.innerHTML = html; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; };
   const q = sql => `<details><summary>Query against the semantic view</summary><pre>${esc(sql)}</pre></details>`;
@@ -590,7 +576,7 @@ details.exp[open] summary { color: #c81e1e; }
     const wsHit = [...new Set(models.map(m => m.ws))].find(w => t.includes(w));
     if (/structure|passed|how many.*(pass|match)/.test(t)) {
       const ps = models.filter(m => m.stage === "pass");
-      return `${ps.length} of ${models.length} models have a matching structure. None has had a full numbers check yet. Tables matching in the sample run:` + li(ps.map(m => `${esc(m.name)}: ${m.matched} of ${m.tables}`)) +
+      return `${ps.length} of ${models.length} models have a matching structure and are waiting for a full numbers check. ${models.filter(m => SI[m.stage] < SI.pass).length} more are further along. Tables matching in the sample run for those ${ps.length}:` + li(ps.map(m => `${esc(m.name)}: ${m.matched} of ${m.tables}`)) +
         q(`SELECT model_name, parity_preview\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.stage\n  METRICS model.parity_preview)\nWHERE stage = 'Structure matches';`);
     }
     if (/empty|blocked|waiting|awaiting/.test(t)) {
@@ -599,7 +585,7 @@ details.exp[open] summary { color: #c81e1e; }
         q(`SELECT model_name, workspace\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.workspace, issue.issue_label)\nWHERE issue_label = 'No data in tables yet';`);
     }
     if (/chang|moved|week|7 days|recent/.test(t)) {
-      return `Over the 7 days before the last load, ${MOVES.length} models changed stage:` + li(MOVES.map(x => `${esc(models[x.id].name)}: ${stageOf(x.from).name} → ${stageOf(x.to).name}`)) + `The last load itself had no stage changes.` +
+      return `In the week before the last load, ${MOVES.length} models moved:` + li(MOVES.map(x => `${esc(models[x.id].name)}: ${stageOf(x.from).name} → ${stageOf(x.to).name}`)) + `The last load itself had no stage changes.` +
         q(`SELECT model_name, from_stage, to_stage, changed_at\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, stage_event.from_stage,\n             stage_event.to_stage, stage_event.changed_at)\nWHERE changed_at >= DATEADD(day, -7, CURRENT_TIMESTAMP());`);
     }
     if (/workspace|behind|furthest/.test(t) && !wsHit) {
@@ -615,7 +601,7 @@ details.exp[open] summary { color: #c81e1e; }
     }
     if (/users|most used|priorit|ready models/.test(t)) {
       const ms = models.filter(m => m.stage === "pass").sort((a, b) => b.users - a.users);
-      return `Models with a matching structure, by users in the last 90 days:` + li(ms.map(m => `${esc(m.name)}: ${m.users}`)) + `${esc(ms[0].name)} reaches the most people, so it's the best one to hand to the business first.` +
+      return `Models with a matching structure, by users in the last 3 months:` + li(ms.map(m => `${esc(m.name)}: ${m.users}`)) + `${esc(ms[0].name)} reaches the most people, so it's the best one to hand to the business first.` +
         q(`SELECT model_name, users_90d\nFROM SEMANTIC_VIEW(migration_status\n  DIMENSIONS model.model_name, model.stage\n  METRICS usage.users_90d)\nWHERE stage = 'Structure matches'\nORDER BY users_90d DESC;`);
     }
     const owner = OWNERS.find(o => o !== "Unassigned" && t.includes(o.split(" ")[0].toLowerCase()));
@@ -647,6 +633,7 @@ details.exp[open] summary { color: #c81e1e; }
   document.addEventListener("keydown", e => { if (e.key === "Escape" && chat.classList.contains("open")) openChat(false); });
   $("chat-f").addEventListener("submit", e => { e.preventDefault(); const v = $("chat-in").value; $("chat-in").value = ""; ask(v); });
 
+  $("n-models").textContent = models.length; $("n-total").textContent = models.length;
   $("stamp").textContent = fmtDT(LOAD);
   $("stamp-age").textContent = `${daysAgo(LOAD)} d ago`;
   $("stampbox").classList.toggle("fresh", daysAgo(LOAD) <= 2);
